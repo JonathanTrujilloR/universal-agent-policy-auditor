@@ -1,0 +1,45 @@
+schema: spec-driven
+
+context: |
+  Product: Universal Agent Policy Auditor, audit-only alpha.
+  Current source: PRD.md plus the bounded Work Unit 1 source foundation.
+  Intended stack: Go single binary; the module and executable tests now exist.
+  Scope: local read-only OpenCode and Claude Code policy discovery, parsing, audit, and comparison.
+  Safety: unknown, unsupported, ambiguous, and lossy semantics block unqualified success.
+  Testing: Go module with executable package tests; `go test ./...`, `go vet ./...`, `go build ./...`, and `gofmt -l .` are available. Strict TDD is active.
+  Artifact store: hybrid OpenSpec files plus Engram project observations.
+
+strict_tdd: true
+
+testing:
+  runner: "go test ./..."
+  framework: "Go testing"
+  unit: true
+  integration: false
+  e2e: false
+  coverage: true
+  linter: null
+  type_checker: null
+  formatter: "gofmt"
+
+rules:
+  proposal:
+    - Keep MVP read-only and include rollback considerations for any future mutation proposal.
+  specs:
+    - Use Given/When/Then scenarios and RFC 2119 requirement keywords.
+    - Preserve explicit uncertainty, provenance, and non-comparability semantics.
+  design:
+    - Document adapter boundaries, canonical-model decisions, and safety rationale.
+  tasks:
+    - Group tasks by phase with hierarchical numbering; keep each task independently completable.
+  apply:
+    guidelines:
+      - Follow the established Go project conventions once implementation begins.
+    tdd: true
+    test_command: "go test ./..."
+  verify:
+    test_command: "go test ./..."
+    build_command: "go build ./..."
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas into main specifications.
