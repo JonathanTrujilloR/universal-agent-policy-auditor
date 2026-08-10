@@ -1,0 +1,64 @@
+name: Feature request
+description: Propose a scoped improvement for maintainer review
+title: "[Feature]: "
+labels:
+  - enhancement
+  - status:needs-review
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement. Complete every required section so maintainers can make a clear scope decision.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched open and closed issues and found no existing request that covers this proposal.
+          required: true
+        - label: This request describes one scoped outcome and does not combine unrelated changes.
+          required: true
+        - label: I have not included secrets, credentials, private paths, or other sensitive information.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or user need should this feature address?
+      placeholder: Describe the current limitation, who it affects, and why it matters.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior and the boundaries of the change.
+      placeholder: Explain the outcome rather than prescribing unnecessary implementation detail.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Core permission and evidence model
+        - Policy resolution and audit engine
+        - CLI and user workflows
+        - Client or platform adapters
+        - Documentation and tooling
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and context
+      description: What alternatives, workarounds, dependencies, or out-of-scope concerns should reviewers know?
+      placeholder: Include enough context to compare this proposal with the status quo.
+    validations:
+      required: true
