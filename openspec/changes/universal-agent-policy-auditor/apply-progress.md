@@ -56,3 +56,46 @@ Tasks 2.1–5.2 remain unchecked. The next autonomous slice is Work Unit 2: mode
 - Initial slice: 320 lines (314 new-file lines plus 3 additions and 3 deletions in task checkboxes).
 - Correction: 47 lines (28 test lines plus 19 progress-evidence lines).
 - Cumulative source-foundation slice: 367 authored changed lines; correction stays below its 120-line limit.
+
+## Work Unit 2: Model Evidence
+
+- Status: complete. Delivery remains auto-chain, stacked-to-main; this uncommitted slice is only `internal/model/`, `support/`, and its three task marks.
+- Native original accounting: 329/400 authored changed lines — independently within its native limit.
+- Supported clients: none. The empty support matrix is an evidence gate, not an assertion of OpenCode or Claude Code support.
+
+### Completed Tasks
+
+- [x] 2.1 Research and record documentation/source evidence plus an empty support matrix and fail-closed fixtures.
+- [x] 2.2 Add immutable permission, evidence/provenance, finding, completeness, extension, and resolution-trace types.
+- [x] 2.3 Validate malformed, unknown, unsupported, missing-evidence, default, matcher, and condition metadata as incomplete.
+
+### TDD Cycle Evidence
+
+| Task | RED | GREEN | REFACTOR |
+|---|---|---|---|
+| 2.1 | `matrix_test.go` failed: package/API absent | focused tests PASS | clean |
+| 2.2 | `model_test.go` failed: constructors/types undefined; typed provenance initially undefined | focused tests PASS | copied accessors |
+| 2.3 | table cases failed: validator absent | focused tests PASS | table-driven cases |
+
+### Work Unit Evidence
+
+| Evidence | Result |
+|---|---|
+| Focused test | `go test ./internal/model/... ./support/...` — PASS |
+| Runtime harness | N/A — library-only slice; adapters and CLI are deferred. |
+| Rollback boundary | Remove `internal/model/`, `support/`, this section, and task marks; no target configuration was read or modified. |
+
+### Sources and limits
+
+- Authoritative docs and upstream source links are recorded in `support/evidence.md`; no licensed code was copied.
+- No process, network client, filesystem-write API, adapter, or canonical policy DSL was added. Documentation fetches were research-only; production code is deterministic and local.
+
+## Correction Rerun: Model Evidence
+
+- Native correction accounting: 138/140 authored changed lines — independently within its native limit.
+- Gate failure corrected: validation now resolves the canonical matrix row by target/version/construct and ignores candidate fixture, evidence, and semantic-strength fields.
+- `support.Load` executes the checked-in `matrix.json`, `fixtures.json`, and `evidence.json` registries; all remain empty, so zero client versions are supported.
+- RED: `go test ./support/... -run 'TestValidateUsesCanonicalRowAndRegistry|TestLoadConsumesConfiguredZeroSupportRegistry'` failed for undefined `Registry` and `Load`; GREEN: `go test ./support/...` PASS.
+- Direct cases reject forged candidate metadata, absent fixture ID, absent evidence ID, and incomplete canonical semantics.
+- Verification: `gofmt -l .` clean; `go vet ./...`, `go test ./...`, `go test -cover ./...`, `go build ./...`, and `git diff --check` PASS.
+- Correction rollback: revert `support/matrix.go`, `support/matrix_test.go`, the three support registries/docs, and this section. No process, network client, write API, adapter, or CLI was introduced.

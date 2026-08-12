@@ -34,9 +34,9 @@ Chain strategy: pending
 
 ## Phase 2: Evidence, Model, and Fixtures
 
-- [ ] 2.1 Research official docs/upstream source/executable behavior; create `support/` matrix, evidence manifests, and conformance fixtures; support nothing without evidence plus a fixture.
-- [ ] 2.2 Implement `internal/model/` immutable permissions, provenance, findings/completeness, extensions, copied accessors, and immutable `ResolutionTrace`; test stable traces/redaction.
-- [ ] 2.3 RED then implement fixtures for every matrix row, defaults, merge/precedence, matchers, conditions, malformed input, unknown permission constructs, and unsupported versions.
+- [x] 2.1 Research official docs/upstream source/executable behavior; create `support/` matrix, evidence manifests, and conformance fixtures; support nothing without evidence plus a fixture.
+- [x] 2.2 Implement `internal/model/` immutable permissions, provenance, findings/completeness, extensions, copied accessors, and immutable `ResolutionTrace`; test stable traces/redaction.
+- [x] 2.3 RED then implement fixtures for every matrix row, defaults, merge/precedence, matchers, conditions, malformed input, unknown permission constructs, and unsupported versions.
 
 ## Phase 3: Adapters and Resolution
 
