@@ -99,3 +99,71 @@ Tasks 2.1–5.2 remain unchecked. The next autonomous slice is Work Unit 2: mode
 - Direct cases reject forged candidate metadata, absent fixture ID, absent evidence ID, and incomplete canonical semantics.
 - Verification: `gofmt -l .` clean; `go vet ./...`, `go test ./...`, `go test -cover ./...`, `go build ./...`, and `git diff --check` PASS.
 - Correction rollback: revert `support/matrix.go`, `support/matrix_test.go`, the three support registries/docs, and this section. No process, network client, write API, adapter, or CLI was introduced.
+
+## Work Unit 3 Slice 1: OpenCode Adapter Foundation
+
+- Status: partial; independently reviewable adapter-foundation slice only. Task 3.1 remains unchecked because support-matrix-backed conformance fixtures and full OpenCode support acceptance are not complete.
+- Branch/base: `feat/opencode-adapter-wu3-pr4` from updated `origin/main` merge commit `3d69d1b6ff1963226134fd962b1dea8f51d760e4` (PR #4 merge).
+- Delivery: auto-chain, stacked-to-main. Current PR boundary is `internal/adapter/opencode/` plus this progress evidence; Claude Code and comparison/output work are explicitly out of scope.
+- Runtime attempt token supplied by parent: `sha256:ab76282168547f4bb4c38bbb24364be389662b080269f8459a4d24806b8ecea4`; parent owns settlement.
+
+### Completed Scope in This Slice
+
+- Added `internal/adapter/opencode/` with a declarative bounded discovery plan, data-only JSON parser, last-source OpenCode rule precedence, adapter-local report, immutable model permissions, redacted provenance, target extension metadata, and conditional/static-runtime trace limitations.
+- Added fail-closed diagnostics for malformed OpenCode JSON, unknown effects, unknown permission objects, and plural `permissions` permission-bearing constructs that are not modeled.
+- Preserved read-only boundaries: the adapter accepts `source.SelectedSource` bytes, has no write/process/network interface, and delegates filesystem selection to `internal/source` plans.
+
+### TDD Cycle Evidence
+
+| Task / behavior | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|
+| OpenCode adapter foundation | `go test ./internal/adapter/opencode/...` failed for undefined `DiscoveryPlan` and `Resolve`. | Implemented `opencode.go`; focused tests passed. | Added plural `permissions` unknown-construct case; focused test failed with complete/no findings. | Added top-level permission-bearing unknown-construct detection; `gofmt` clean and focused tests passed. |
+
+### Work Unit Evidence
+
+| Evidence | Result |
+|---|---|
+| Focused RED | `go test ./internal/adapter/opencode/...` — FAIL as expected before implementation (`undefined: DiscoveryPlan`, `undefined: Resolve`). |
+| Focused GREEN | `go test ./internal/adapter/opencode/...` — PASS after initial implementation. |
+| Triangulation RED | `go test ./internal/adapter/opencode/...` — FAIL for `permission-bearing unknown top-level` returning complete/no findings. |
+| Focused final | `go test ./internal/adapter/opencode/...` — PASS. |
+| Adapter package | `go test ./internal/adapter/...` — PASS. |
+| Formatter check | `gofmt -l .` — no output. |
+| Diff whitespace | `git diff --check` — no output. |
+| Full tests | `go test ./...` — PASS. |
+| Vet | `go vet ./...` — PASS. |
+| Build | `go build ./...` — PASS. |
+| Runtime harness | N/A — adapter library-only slice; CLI fixture audit is deferred until task 4.3 wiring. |
+| Rollback boundary | Remove `internal/adapter/opencode/` and this Work Unit 3 Slice 1 section; no target configuration was read or modified. |
+
+### Deviations from Design
+
+- Full task 3.1 is intentionally not marked complete. This slice establishes the OpenCode adapter boundary and fail-closed parser/resolver behavior, but does not yet declare a support-matrix-backed OpenCode version or complete evidence-backed conformance fixtures.
+- Source ordering for precedence is modeled from the `[]source.SelectedSource` order supplied to the adapter; broader discovery/merge ordering remains part of the remaining task 3.1/3.3 work.
+
+### Authored-Line Accounting
+
+- Adapter code and tests before progress update: 265 authored new lines (`internal/adapter/opencode/opencode.go` 173, `internal/adapter/opencode/opencode_test.go` 92).
+- Progress evidence adds this section only; task checkboxes are unchanged.
+- Exact candidate accounting after progress update: **333 authored changed lines** (333 additions, 0 deletions), including untracked adapter files and OpenSpec progress.
+
+### Remaining
+
+Exact unchecked implementation tasks remain:
+
+- [ ] 3.1 RED then implement `internal/adapter/opencode/` plan, parser, resolver, runtime limits, and evidence-backed fixtures.
+- [ ] 3.2 RED then implement `internal/adapter/claudecode/` with the same gates; preserve target semantics, not a shared policy engine.
+- [ ] 3.3 Test allow/deny/ask/default/conditional/unresolved outcomes, precedence traces, ambiguity, and static-vs-runtime limitations.
+- [ ] 4.1 RED then implement `internal/compare/` dimension-aware equivalent/broader/narrower/target-only/unsupported/ambiguous/lossy/not-comparable findings.
+- [ ] 4.2 Implement `internal/redact/` before `internal/render/`; add versioned JSON, stable ordering/IDs, human blockers-first output, and redaction goldens.
+- [ ] 4.3 Wire `internal/app/` and `cmd/auditor` requests, explicit sources/discovery, streams, help, and exits; test read-only, no-write, byte-stable audits.
+- [ ] 4.4 Document alpha limits, modeled-not-enforced semantics, matrix/evidence process, verification commands, and exclusions.
+- [ ] 5.1 Run `gofmt -l .`, `go vet ./...`, `go test ./...`, and `go build ./cmd/auditor`; inspect all goldens generated through the approved `-update` path, then rerun without `-update`.
+- [ ] 5.2 Run fuzz/property tests for depth, files, bytes, rules, references, diagnostics, and cancellation; verify unchanged content/metadata and no process/network execution.
+
+### Structured Status Consumed
+
+- `schema`: `gentle-ai.sdd-status/v1`; `artifactStore`: `openspec` with session hybrid persistence.
+- `nextRecommended`: `apply`; `dependencies.apply`: `ready`; `taskProgress`: 6/15 complete.
+- `actionContext.mode`: repo-local; workspace root and allowed edit root: `/home/jkelevra/Code/Proyect_OpenSource`.
+- Remediation required: false. No action-context warning; all edited paths are under the allowed root.
