@@ -1,7 +1,12 @@
-## Linked approved issue
+## Linked approved Work Unit issue
 
-<!-- Replace N with an issue carrying the status:approved label. -->
-Closes #N
+<!--
+One approved issue governs one coherent Work Unit, even when delivery is split across bounded PR slices.
+Replace N and keep exactly one link:
+- Intermediate PR: `Refs #N` (MUST NOT close the Work Unit issue).
+- Final PR: `Closes #N` (or an equivalent closing keyword). Exactly the final PR closes the issue.
+-->
+Refs #N
 
 ## PR type
 
@@ -26,20 +31,26 @@ Closes #N
 
 ## Test plan
 
-<!-- List reproducible checks and their results. -->
+<!-- List reproducible checks and their results as review evidence. -->
 - [ ] Relevant automated tests pass
 - [ ] Affected behavior was verified manually, when applicable
 
-## Chain context
+## Chain and rollback context
 
-<!-- Link the previous and next PR when chained. Write "Not chained" otherwise. -->
-Not chained
+<!-- Link adjacent PRs when chained. Write "Not chained" where an item does not apply. -->
+- Previous PR: Not chained
+- Next PR: Not chained
+- Final Work Unit slice: Yes / No
+- Rollback boundary: <!-- Explain how this slice can be reverted independently. -->
 
 ## Contributor checklist
 
-- [ ] I linked an issue with the `status:approved` label.
+- [ ] I linked one issue with the `status:approved` label that governs this coherent Work Unit.
+- [ ] This PR does not combine outcomes unrelated to the Work Unit.
+- [ ] I used `Refs #N` without a closing keyword for an intermediate PR, or `Closes #N` (or equivalent) for the final PR only.
 - [ ] I selected exactly one PR type and added exactly one matching `type:*` label.
 - [ ] My commits follow Conventional Commits and contain no `Co-Authored-By` trailers.
-- [ ] I kept this PR scoped to the linked issue and documented anything intentionally out of scope.
+- [ ] I kept this PR within the 400 changed-line budget, or documented the approved exception.
+- [ ] I documented chain context, review evidence, rollback boundaries, and anything intentionally out of scope.
 - [ ] I added or updated tests for behavior changes, or explained why tests are not applicable.
 - [ ] I updated documentation when user-facing behavior changed.

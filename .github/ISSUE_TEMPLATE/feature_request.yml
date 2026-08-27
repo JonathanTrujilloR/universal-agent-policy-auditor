@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for proposing an improvement. Complete every required section so maintainers can make a clear scope decision.
+        Thanks for proposing an improvement. This issue will govern one coherent Work Unit if approved, even when delivery requires multiple bounded PR slices. Complete every required section so maintainers can make a clear scope decision.
 
   - type: checkboxes
     id: preflight
@@ -17,7 +17,7 @@ body:
       options:
         - label: I searched open and closed issues and found no existing request that covers this proposal.
           required: true
-        - label: This request describes one scoped outcome and does not combine unrelated changes.
+        - label: This request defines one coherent Work Unit outcome and does not combine unrelated outcomes.
           required: true
         - label: I have not included secrets, credentials, private paths, or other sensitive information.
           required: true
@@ -35,8 +35,8 @@ body:
     id: solution
     attributes:
       label: Proposed solution
-      description: Describe the desired behavior and the boundaries of the change.
-      placeholder: Explain the outcome rather than prescribing unnecessary implementation detail.
+      description: Describe the desired behavior and the boundaries of this Work Unit. Bounded PR slices may share this issue, but unrelated outcomes require separate issues.
+      placeholder: Explain the coherent outcome rather than prescribing unnecessary implementation detail.
     validations:
       required: true
 
