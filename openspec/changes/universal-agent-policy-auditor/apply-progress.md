@@ -167,3 +167,74 @@ Exact unchecked implementation tasks remain:
 - `nextRecommended`: `apply`; `dependencies.apply`: `ready`; `taskProgress`: 6/15 complete.
 - `actionContext.mode`: repo-local; workspace root and allowed edit root: `/home/jkelevra/Code/Proyect_OpenSource`.
 - Remediation required: false. No action-context warning; all edited paths are under the allowed root.
+
+## Work Unit 3 Slice 2: OpenCode Conformance Safety Gate
+
+- Status: partial; independently reviewable OpenCode conformance slice only. Tasks 3.1 and 3.3 remain unchecked because full OpenCode acceptance and support-matrix-backed version support are not complete.
+- Branch/base: `feat/opencode-conformance-wu3-slice2` from updated `origin/main` merge commit `32bdafd4bc185beb668f923eb9d13f62a087d9a1` (PR #6 merge).
+- Delivery: auto-chain, stacked-to-main. Current PR boundary is OpenCode support gating, conformance fixture tests, runtime/static limitation traces, ambiguous source-order failure, and this progress evidence.
+- Runtime attempt token supplied by parent: `sha256:29a4121520c38b38f6247a3964219eb6011e27c2916cc9dca93652fde20806f7`; parent owns settlement.
+
+### Completed Scope in This Slice
+
+- Added an explicit OpenCode support gate: `Resolve` now fails closed with `opencode-unsupported-version` under the checked-in zero-support metadata, so no OpenCode version is declared supported by default.
+- Added `ResolveWithOptions` for future evidence-backed support metadata without mutating the checked-in zero-support registries.
+- Added local conformance fixture coverage for precedence plus runtime-dependent conditional permissions; this fixture is test-only and does not add support-matrix entries.
+- Added fail-closed behavior for duplicate/missing source identities that make precedence order ambiguous.
+- Added unresolved default modeling for requested capabilities absent from parsed rules; the result remains incomplete with an explicit default trace and limitation.
+
+### TDD Cycle Evidence
+
+| Behavior | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|
+| OpenCode support gate, conformance fixture, runtime limit, ambiguous order | `go test ./internal/adapter/opencode/...` failed for undefined `ResolveWithOptions`, `Options`, and `RequestedCapabilities`. | Added `Options`, support validation, runtime-limit findings, ambiguous-order detection, and fixture-backed tests; focused package passed. | Added missing-capability default test; focused test failed because `Options.RequestedCapabilities` was absent. | Added unresolved-default permissions/traces, ran `gofmt`, and focused package passed. |
+
+### Work Unit Evidence
+
+| Evidence | Result |
+|---|---|
+| Focused RED | `go test ./internal/adapter/opencode/...` — FAIL as expected before implementation (`undefined: ResolveWithOptions`, `undefined: Options`). |
+| Focused GREEN | `go test ./internal/adapter/opencode/...` — initially failed until existing malformed/unknown cases were scoped through supported test options; then PASS. |
+| Triangulation RED | `go test ./internal/adapter/opencode/...` — FAIL as expected (`options.RequestedCapabilities undefined`). |
+| Focused final | `go test ./internal/adapter/opencode/...` — PASS. |
+| Adapter package | `go test ./internal/adapter/...` — PASS. |
+| Formatter check | `gofmt -l .` — no output. |
+| Diff whitespace | `git diff --check` — no output. |
+| Full tests | `go test ./...` — PASS. |
+| Vet | `go vet ./...` — PASS. |
+| Build | `go build ./...` — PASS. |
+| Runtime harness | N/A — adapter library-only slice; CLI fixture audit remains deferred until task 4.3 wiring. |
+| Rollback boundary | Revert the modifications to `internal/adapter/opencode/`, remove `testdata/conformance/opencode/permissions-precedence-runtime.json`, and remove this progress section; no target configuration was read or modified. |
+
+### Deviations from Design
+
+- No checked-in support matrix entry was added. This intentionally preserves the release gate that currently supports zero OpenCode versions.
+- `ResolveWithOptions` is an adapter-local seam for future evidence-backed metadata; it does not create a canonical policy DSL or execute OpenCode.
+- Default semantics are modeled as unresolved rather than as a native OpenCode default because the checked-in registries still lack version-pinned evidence.
+
+### Authored-Line Accounting
+
+- Code/tests/fixture before progress update: 135 authored changed lines (`internal/adapter/opencode/opencode.go` 64 additions/3 deletions; `internal/adapter/opencode/opencode_test.go` 49 additions/9 deletions; `testdata/conformance/opencode/permissions-precedence-runtime.json` 10 additions).
+- Task checkboxes are unchanged: no implementation-owned task is fully complete in this slice.
+- Exact candidate accounting after progress update: **206 authored changed lines** (184 additions, 12 deletions in tracked files; 10 untracked fixture lines), including OpenSpec progress and untracked files.
+
+### Remaining
+
+Exact unchecked implementation tasks remain:
+
+- [ ] 3.1 RED then implement `internal/adapter/opencode/` plan, parser, resolver, runtime limits, and evidence-backed fixtures.
+- [ ] 3.2 RED then implement `internal/adapter/claudecode/` with the same gates; preserve target semantics, not a shared policy engine.
+- [ ] 3.3 Test allow/deny/ask/default/conditional/unresolved outcomes, precedence traces, ambiguity, and static-vs-runtime limitations.
+- [ ] 4.1 RED then implement `internal/compare/` dimension-aware equivalent/broader/narrower/target-only/unsupported/ambiguous/lossy/not-comparable findings.
+- [ ] 4.2 Implement `internal/redact/` before `internal/render/`; add versioned JSON, stable ordering/IDs, human blockers-first output, and redaction goldens.
+- [ ] 4.3 Wire `internal/app/` and `cmd/auditor` requests, explicit sources/discovery, streams, help, and exits; test read-only, no-write, byte-stable audits.
+- [ ] 4.4 Document alpha limits, modeled-not-enforced semantics, matrix/evidence process, verification commands, and exclusions.
+- [ ] 5.1 Run `gofmt -l .`, `go vet ./...`, `go test ./...`, and `go build ./cmd/auditor`; inspect all goldens generated through the approved `-update` path, then rerun without `-update`.
+- [ ] 5.2 Run fuzz/property tests for depth, files, bytes, rules, references, diagnostics, and cancellation; verify unchanged content/metadata and no process/network execution.
+
+### Structured Status Consumed
+
+- `schema`: `gentle-ai.sdd-status/v1`; `artifactStore`: `openspec`; session mode hybrid.
+- `nextRecommended`: `apply`; `dependencies.apply`: `ready`; initial `taskProgress`: 6/15 complete.
+- `actionContext.mode`: repo-local; workspace root and allowed edit root: `/home/jkelevra/Code/Proyect_OpenSource`.
+- Remediation required: false. No action-context warning; all edited paths are under the allowed root.

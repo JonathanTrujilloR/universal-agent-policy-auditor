@@ -1,0 +1,10 @@
+{
+  "permission": {
+    "bash": "allow",
+    "webfetch": {
+      "effect": "deny",
+      "match": "https://example.com/*",
+      "condition": "interactive approval"
+    }
+  }
+}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
+	"github.com/jkelevra/universal-agent-policy-auditor/support"
 )
 
 const (
@@ -21,6 +22,13 @@ type Report struct {
 	Completeness model.Completeness
 	Permissions  []model.Permission
 	Findings     []model.Finding
+}
+
+// Options binds adapter resolution to evidence-backed support metadata.
+type Options struct {
+	Version               string
+	Support               support.Matrix
+	RequestedCapabilities []string
 }
 
 // DiscoveryPlan declares bounded OpenCode source selection; it performs no I/O.
@@ -38,8 +46,19 @@ func DiscoveryPlan(root string, explicit []string) source.Plan {
 	}
 }
 
-// Resolve parses data-only OpenCode JSON and applies last-rule precedence by source order.
+// Resolve parses data-only OpenCode JSON with the checked-in zero-support gate.
 func Resolve(sources []source.SelectedSource) Report {
+	return ResolveWithOptions(sources, Options{})
+}
+
+// ResolveWithOptions parses data-only OpenCode JSON and applies last-rule precedence by source order.
+func ResolveWithOptions(sources []source.SelectedSource, options Options) Report {
+	if unsupported(options) {
+		return Report{Completeness: model.CompletenessIncomplete, Findings: []model.Finding{model.NewFinding("opencode-unsupported-version", "OpenCode version is not supported by evidence-backed metadata")}}
+	}
+	if ambiguousSourceOrder(sources) {
+		return Report{Completeness: model.CompletenessIncomplete, Findings: []model.Finding{model.NewFinding("opencode-ambiguous-source-order", "OpenCode source order is ambiguous")}}
+	}
 	report := Report{Completeness: model.CompletenessComplete}
 	rules := map[string][]permissionRule{}
 	for _, selected := range sources {
@@ -60,7 +79,19 @@ func Resolve(sources []source.SelectedSource) Report {
 		if final.invalid != "" {
 			continue
 		}
-		report.Permissions = append(report.Permissions, final.permission(capability, chain))
+		permission := final.permission(capability, chain)
+		if permission.Trace().Status() == model.CompletenessIncomplete {
+			report.Completeness = model.CompletenessIncomplete
+			report.Findings = append(report.Findings, model.NewFinding("opencode-runtime-limit", "OpenCode permission depends on runtime context outside static analysis"))
+		}
+		report.Permissions = append(report.Permissions, permission)
+	}
+	for _, capability := range options.RequestedCapabilities {
+		if _, ok := rules[capability]; !ok {
+			report.Completeness = model.CompletenessIncomplete
+			report.Findings = append(report.Findings, model.NewFinding("opencode-unresolved-default", "OpenCode default permission is not modeled for the requested capability"))
+			report.Permissions = append(report.Permissions, unresolvedDefault(capability))
+		}
 	}
 	sort.Slice(report.Permissions, func(i, j int) bool { return report.Permissions[i].Capability() < report.Permissions[j].Capability() })
 	return report
@@ -134,8 +165,38 @@ func (r permissionRule) permission(capability string, chain []permissionRule) mo
 	if len(chain) > 1 {
 		steps = append(steps, model.TraceStep{Kind: model.TracePrecedence, Before: chain[len(chain)-2].effect, After: effect, Rules: []string{r.location}, Rationale: "later OpenCode source overrides earlier rule", Evidence: evidence(r)})
 	}
+	extensions := []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}}
+	if len(unresolved) > 0 {
+		steps = append(steps, model.TraceStep{Kind: model.TraceRuntime, Before: r.effect, After: effect, Rules: []string{r.location}, Rationale: "runtime context is outside static configuration analysis", Evidence: evidence(r)})
+		extensions = append(extensions, model.Extension{Target: "opencode", Key: "limitation", Value: "static-not-runtime-enforcement"})
+	}
 	trace := model.NewResolutionTrace(steps, unresolved, completeness(unresolved))
-	return model.NewPermissionWithProvenance(capability, effect, model.Scope("opencode"), r.matcher, conditions, []model.Provenance{evidence(r)}, []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}}, trace)
+	return model.NewPermissionWithProvenance(capability, effect, model.Scope("opencode"), r.matcher, conditions, []model.Provenance{evidence(r)}, extensions, trace)
+}
+
+func unresolvedDefault(capability string) model.Permission {
+	provenance := model.NewProvenance("opencode", "requested:"+capability, "")
+	trace := model.NewResolutionTrace([]model.TraceStep{{Kind: model.TraceDefault, After: model.EffectUnresolved, Rules: []string{"requested:" + capability}, Rationale: "OpenCode default is unresolved without version-pinned default semantics", Evidence: provenance}}, []string{"default permission for " + capability}, model.CompletenessIncomplete)
+	return model.NewPermissionWithProvenance(capability, model.EffectUnresolved, model.Scope("opencode"), capability, nil, []model.Provenance{provenance}, []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}, {Target: "opencode", Key: "limitation", Value: "unresolved-default"}}, trace)
+}
+
+func unsupported(options Options) bool {
+	if options.Version == "" {
+		return true
+	}
+	result := support.Validate(options.Support, support.Entry{Target: "opencode", Version: options.Version, Construct: "permission"})
+	return result.Completeness != model.CompletenessComplete
+}
+
+func ambiguousSourceOrder(sources []source.SelectedSource) bool {
+	seen := map[string]bool{}
+	for _, selected := range sources {
+		if selected.Identity == "" || seen[selected.Identity] {
+			return true
+		}
+		seen[selected.Identity] = true
+	}
+	return false
 }
 
 func evidence(rule permissionRule) model.Provenance {
