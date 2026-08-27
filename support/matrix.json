@@ -1,0 +1,5 @@
+{
+  "schema": "support-matrix/v1",
+  "entries": [],
+  "gate": "No OpenCode or Claude Code version is supported until a version-pinned entry has official documentation, upstream source or executable evidence, and a passing fixture."
+}
