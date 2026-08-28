@@ -238,3 +238,39 @@ Exact unchecked implementation tasks remain:
 - `nextRecommended`: `apply`; `dependencies.apply`: `ready`; initial `taskProgress`: 6/15 complete.
 - `actionContext.mode`: repo-local; workspace root and allowed edit root: `/home/jkelevra/Code/Proyect_OpenSource`.
 - Remediation required: false. No action-context warning; all edited paths are under the allowed root.
+
+## Work Unit 3 Slice 3: Claude Code Adapter Boundary
+
+- Status/PR boundary: partial; task 3.2 remains unchecked because support metadata still declares zero supported Claude Code versions; auto-chain stacked-to-main boundary is `internal/adapter/claudecode/`, one fixture, and this progress section. No task checkbox changed.
+- Prior history preserved: production corrections `sha256:6e1a041340c6940591741420de98c74a94063f8b5187020f449fd65abc3ea265` and `sha256:956eb0c4b872b4dbbaa771b68e03e6dfdb946fc335e767b02d3cbb3074f32078` made unknown/malformed semantics fail closed; prior settlement `sha256:8a3acc6f1d1ddd40b56e89d076289016f15025929e26e988f202f8d6b3ddb0a2` remains historical only.
+- Current TEST-ONLY token `sha256:d832b524b1716a6ee83aa72c7278025ff907735830422fb5927d9acb485344dd` is parent-owned/pending settlement; no settle/receipt is claimed. Current correction touches only `internal/adapter/claudecode/claudecode_test.go` and this file; production `claudecode.go` was not modified.
+- Current correction: `permissionByMatcher` takes `testing.TB`, calls `t.Helper()`, and fails immediately with `t.Fatalf("missing permission matcher ...")`; malformed-condition evidence checks the slice directly instead of indexing a missing helper result.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 3.2 test-helper correction | `internal/adapter/claudecode/claudecode_test.go` | Unit | `go test ./internal/adapter/claudecode/... -count=1` PASS | focused helper-call compile RED: old helper rejected `testing.TB` and still returned zero on misses | helper uses `t.Helper` + `t.Fatalf`; focused command PASS | matcher-dependent condition/default/ask/precedence tests passed; malformed-condition case proves absence without helper lookup | gofmt clean; no production diff |
+
+### Evidence and Accounting
+
+| Evidence | Result |
+| --- | --- |
+| Focused checks | RED focused matcher tests FAIL (old helper signature); GREEN same command PASS; `go test ./internal/adapter/claudecode/... -count=1` PASS. |
+| Broad checks | `gofmt -l .` no output; `git diff --check` no output; `go test ./internal/adapter/... -count=1` PASS; `go test ./... -count=1` PASS; `go vet ./...` PASS; `go build ./...` PASS. |
+| Runtime harness | N/A — adapter library-only slice; no CLI/runtime boundary exists yet. |
+| Authored lines | Complete unpublished slice: 400/400 lines (231 Go + 132 test + 1 fixture + 36 progress); current correction delta is test-only plus progress compaction and stays within the 20-line correction budget pending parent settlement. |
+| Rollback | Revert `internal/adapter/claudecode/claudecode_test.go` helper edits and this compacted section; no target configuration was read or modified. |
+| Structured status | `gentle-ai.sdd-status/v1`: `artifactStore=openspec`, `nextRecommended=apply`, `applyState=ready`, `taskProgress=6/15`, `blockedReasons=[]`, repo-local allowed root `/home/jkelevra/Code/Proyect_OpenSource`; workload risk remains high but this is an authorized bounded correction inside the allowed root. |
+
+Exact unchecked implementation tasks remain:
+
+- [ ] 3.1 RED then implement `internal/adapter/opencode/` plan, parser, resolver, runtime limits, and evidence-backed fixtures.
+- [ ] 3.2 RED then implement `internal/adapter/claudecode/` with the same gates; preserve target semantics, not a shared policy engine.
+- [ ] 3.3 Test allow/deny/ask/default/conditional/unresolved outcomes, precedence traces, ambiguity, and static-vs-runtime limitations.
+- [ ] 4.1 RED then implement `internal/compare/` dimension-aware equivalent/broader/narrower/target-only/unsupported/ambiguous/lossy/not-comparable findings.
+- [ ] 4.2 Implement `internal/redact/` before `internal/render/`; add versioned JSON, stable ordering/IDs, human blockers-first output, and redaction goldens.
+- [ ] 4.3 Wire `internal/app/` and `cmd/auditor/` requests, explicit sources/discovery, streams, help, and exits; test read-only, no-write, byte-stable audits.
+- [ ] 4.4 Document alpha limits, modeled-not-enforced semantics, matrix/evidence process, verification commands, and exclusions.
+- [ ] 5.1 Run `gofmt -l .`, `go vet ./...`, `go test ./...`, and `go build ./cmd/auditor`; inspect all goldens generated through the approved `-update` path, then rerun without `-update`.
+- [ ] 5.2 Run fuzz/property tests for depth, files, bytes, rules, references, diagnostics, and cancellation; verify unchanged content/metadata and no process/network execution.

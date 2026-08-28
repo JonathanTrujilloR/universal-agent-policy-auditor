@@ -1,0 +1,1 @@
+{"permissions":{"deny":["Bash(git status:*)"],"ask":[{"match":"WebFetch(*)","condition":"interactive approval"}]}}
