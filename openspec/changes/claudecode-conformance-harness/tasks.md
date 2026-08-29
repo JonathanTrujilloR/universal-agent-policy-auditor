@@ -27,8 +27,8 @@ Delivery chain is mandatory before code. Code apply is prohibited while any plan
 - [x] Obtain one approved Work Unit issue with `status:approved` and exactly one `type:*` label before publishing any planning or code PR. <!-- sdd-owner: parent -->
 - [x] Publish and merge Planning PR A with `Refs #N`, paths `exploration.md` + `proposal.md`, count 183+133=316, dependency none, rollback by reverting those two files only. <!-- sdd-owner: parent -->
 - [x] Publish and merge Planning PR B with `Refs #N`, path `design.md`, dependency Planning PR A, final line count <=390 and rollback by reverting design only. <!-- sdd-owner: parent -->
-- [ ] Publish and merge Planning PR C with `Refs #N`, paths `specs/claudecode-conformance/spec.md` + `tasks.md`, dependency Planning PR B, combined <=400 with `tasks.md` <=154 lines. <!-- sdd-owner: parent -->
-- [ ] Confirm main is clean and all planning artifacts are committed before Code PR 1; if not, stop code apply. <!-- sdd-owner: parent -->
+- [x] Publish Planning PR C with `Refs #N`, paths `specs/claudecode-conformance/spec.md` + `tasks.md`, dependency Planning PR B, combined <=400 with `tasks.md` <=154 lines. <!-- sdd-owner: parent -->
+- [x] Record the mandatory post-merge gate: the parent must confirm clean `main` with all planning artifacts committed before Code PR 1; otherwise stop code apply. <!-- sdd-owner: parent -->
 
 ## Code PR 1 - Domain types and classifier only
 
