@@ -1,0 +1,1 @@
+{"event_id":"e1","type":"tool_use","tool":"Bash","tool_use_id":"tu-1","matcher_template":"bash-deny-overlapping-allow"}

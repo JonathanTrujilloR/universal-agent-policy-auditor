@@ -45,12 +45,12 @@ Dependencies: Planning PR C. Allowed paths: `internal/conformance/claudecode/typ
 
 Dependencies: Code PR 1. Allowed paths: `parser.go`, `parser_test.go`, `testdata/events_*.jsonl` under `internal/conformance/claudecode/`. Estimate: 240-380. Runtime: N/A. Rollback: remove parser/fixtures while keeping direct-fact classifier usable.
 
-- [ ] RED: add parser fixture tests for matching tool-use/denial, malformed JSONL, bounds, unsupported, matcher mismatch, duplicate, contradictory success, display-only, denial-without-tool-use, and missing denial. <!-- sdd-owner: implementation -->
-- [ ] GREEN: implement bounded JSONL parsing that emits normalized safe facts, reasons, counts, and line/field diagnostics without storing raw transcript, prompt, path, env, or source text. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: add exact matcher-template and stable tool-use ID correlation cases, including different matcher and ID mismatch. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: keep parser stdlib-only, panic-safe, bounded, and independent from encoder/runtime/workspace/process code. <!-- sdd-owner: implementation -->
-- [ ] Verify with package/root Go tests; record exact results plus runtime `N/A`. <!-- sdd-owner: implementation -->
-- [ ] Prepare Code PR 2 with `Refs #N`, Code PR 1 dependency context, clean diff, rollback, and <=400 authored lines. <!-- sdd-owner: implementation -->
+- [x] RED: add parser fixture tests for matching tool-use/denial, malformed JSONL, bounds, unsupported, matcher mismatch, duplicate, contradictory success, display-only, denial-without-tool-use, and missing denial. <!-- sdd-owner: implementation -->
+- [x] GREEN: implement bounded JSONL parsing that emits normalized safe facts, reasons, counts, and line/field diagnostics without storing raw transcript, prompt, path, env, or source text. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: add exact matcher-template and stable tool-use ID correlation cases, including different matcher and ID mismatch. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: keep parser stdlib-only, panic-safe, bounded, and independent from encoder/runtime/workspace/process code. <!-- sdd-owner: implementation -->
+- [x] Verify with package/root Go tests; record exact results plus runtime `N/A`. <!-- sdd-owner: implementation -->
+- [x] Prepare Code PR 2 with `Refs #N`, Code PR 1 dependency context, clean diff, rollback, and <=400 authored lines. <!-- sdd-owner: implementation -->
 
 ## Code PR 3 - Safety constructors and stable encoder
 

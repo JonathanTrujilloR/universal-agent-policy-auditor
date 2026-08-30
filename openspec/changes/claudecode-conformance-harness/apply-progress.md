@@ -34,3 +34,9 @@ Code PR 1 remains the single stacked-to-main slice after Planning PR C. Final au
 ## Remaining tasks
 
 Code PR 1 has no unchecked implementation rows. Remaining unchecked rows begin at Code PR 2 and remain unchanged in `openspec/changes/claudecode-conformance-harness/tasks.md`; parent-owned archive actions remain deferred to parent lifecycle.
+Code PR 2 correction status: OpenSpec authoritative, `applyState: ready`, token `sha256:8c81a254246eb168c1f9e5cdb510fa1f1c3d6871df27209706160bbd6ae4988b`, failed evidence `sha256:190264629e5120a5df17f6841adc25e74f904920f0ef86c8d0fa171f70364f39`; Code PR 2 only, strict TDD, runtime N/A.
+Completed/checkboxes: Code PR 2 RED/GREEN/TRIANGULATE/REFACTOR/Verify/PR-boundary remain visibly `[x]` in `tasks.md`; parent lifecycle deferred.
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Code PR 2 parser correction | `parser_test.go` | Unit | package test ok (cached) | focused tests failed for malformed fields, unknown status, duplicate denials/results | focused ok 0.002s; package ok 0.003s | required fields/status and duplicate denial/result cases added; diagnostics privacy-safe | `gofmt -w`; `gofmt -l` empty; root tests green |
+Files/verification/remaining: `parser.go`, `parser_test.go`, `testdata/events_*.jsonl`, `tasks.md`, `apply-progress.md`; final focused ok 0.002s, package ok 0.003s, root all packages ok (cached); no encoder/runtime/filesystem/process/network/Claude/support behavior; unchecked rows remain in `tasks.md` from Code PR 3 onward; rollback removes parser/fixtures/progress only; authored count held at 400/400.
