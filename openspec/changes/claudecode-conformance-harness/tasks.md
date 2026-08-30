@@ -34,12 +34,12 @@ Delivery chain is mandatory before code. Code apply is prohibited while any plan
 
 Dependencies: Planning PR C. Allowed paths: `internal/conformance/claudecode/types.go`, `classifier.go`, `classifier_test.go`. Disallowed: parser, encoder, runtime/workspace/process/Claude code, support matrix, ledgers, issues, OpenSpec blocked-main-change files. Estimate: 180-280. Runtime: N/A. Rollback: remove PR 1 files only.
 
-- [ ] RED: add table tests in `classifier_test.go` for closed `Result`, planned `ReasonCode`, provenance gates, sentinel zero-value unknown, and authorized-evidence thresholds. <!-- sdd-owner: implementation -->
-- [ ] GREEN: implement `types.go` and `classifier.go`; fixture/fake/preflight never become `evidence_candidate`; authorized execution requires every design gate and one primary reason. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: cover matcher mismatch, tool-use ID mismatch, missing tool use/denial, denial without tool use, contradictory success, sentinel present/unknown, redaction failure, and unsupported support claim. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: simplify domain names and decision order without new files or exported runtime seams. <!-- sdd-owner: implementation -->
-- [ ] Verify with `go test ./internal/conformance/claudecode` and `go test ./...`; record exact results plus runtime `N/A`. <!-- sdd-owner: implementation -->
-- [ ] Prepare stacked-to-main Code PR 1 with `Refs #N`, <=400 authored lines, dependency on Planning PR C, chain context, and rollback boundary. <!-- sdd-owner: implementation -->
+- [x] RED: add table tests in `classifier_test.go` for closed `Result`, planned `ReasonCode`, provenance gates, sentinel zero-value unknown, and authorized-evidence thresholds. <!-- sdd-owner: implementation -->
+- [x] GREEN: implement `types.go` and `classifier.go`; fixture/fake/preflight never become `evidence_candidate`; authorized execution requires every design gate and one primary reason. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: cover matcher mismatch, tool-use ID mismatch, missing tool use/denial, denial without tool use, contradictory success, sentinel present/unknown, redaction failure, and unsupported support claim. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: simplify domain names and decision order without new files or exported runtime seams. <!-- sdd-owner: implementation -->
+- [x] Verify with `go test ./internal/conformance/claudecode` and `go test ./...`; record exact results plus runtime `N/A`. <!-- sdd-owner: implementation -->
+- [x] Prepare stacked-to-main Code PR 1 with `Refs #N`, <=400 authored lines, dependency on Planning PR C, chain context, and rollback boundary. <!-- sdd-owner: implementation -->
 
 ## Code PR 2 - Structured event parser and JSONL fixtures
 
