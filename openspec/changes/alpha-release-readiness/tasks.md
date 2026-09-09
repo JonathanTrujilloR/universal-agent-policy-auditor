@@ -7,7 +7,7 @@
 | Estimated changed lines | 2,340-3,340+ authored lines total: 940 current planning lines plus 1,400-2,400 implementation lines and this correction |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 OpenCode evidence gate → PR 8 JSON/redaction → PR 9 human renderer → PR 10 #19 integration → PR 11 CI/release build → PR 12 release docs/prerelease → PR 13 post-release pilot pack |
+| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B OpenCode adapter → PR 11 WU3-C app support wiring → PR 12 JSON/redaction → PR 13 human renderer → PR 14 #19 integration → PR 15 CI/release build → PR 16 release docs/prerelease → PR 17 post-release pilot pack |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 5, Work Unit 1. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#20` governs this public identity slice. Chain implication: use `stacked-to-main`; each implementation slice targets `main`, references one coherent approved issue, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 7 of 17, WU3-A1 strict JSON/envelope integrity. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#29` governs the five WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, only final WU3-C closes `#29`, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -39,7 +39,7 @@ Planning issue/reference policy: use one coherent approved planning issue only i
 - [x] Planning PR C delivered the conservative architecture in PR `#24` (225 authored changed lines), merged as `2eccd0d59ef8e5dbd937dbba828061d306328e6f` after independent architecture/test verification. <!-- sdd-owner: implementation -->
 - [x] Planning PR D delivered this corrected task plan in PR `#25` (152 authored changed lines), merged as `cd4bd0904898530645b9cd3a6edab25c1b6e6ef1`, and closed planning issue `#21`. <!-- sdd-owner: implementation -->
 - [x] Planning delivery evidence records issue `#21`, intermediate `Refs #21`, the final closing reference, stacked-to-main order, per-PR counts, structural readback, and rollback boundaries across PRs `#22`-`#25`. <!-- sdd-owner: implementation -->
-- [x] Implementation Work Units 1-9 remained pending until all planning PRs were delivered and the maintainer approved the revised 13-PR chain. <!-- sdd-owner: implementation -->
+- [x] Implementation Work Units remained pending until all planning PRs were delivered and the maintainer approved the revised 17-PR chain, including five WU3 slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence, B adapter, and C app. <!-- sdd-owner: implementation -->
 
 ## Work Unit 1: Public Project Identity, Legal, and Docs Baseline
 
@@ -65,7 +65,21 @@ Issue gate: approved issue `#27` (`status:approved`, `type:feature`). Forecast: 
 
 ## Work Unit 3: OpenCode Evidence Gate
 
-Issue gate: blocked until a dedicated OpenCode evidence Work Unit issue is approved and an exact OpenCode version/evidence source is selected. Forecast: 250-380 authored lines. File surfaces: `support/**`, `internal/adapter/opencode/**`, checked-in fixtures under existing testdata/evidence directories discovered during apply, related tests.
+Issue gate: approved issue `#29` (`status:approved`, implementation WU3 scope) defines five bounded slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence, B adapter, and C app. Forecast is enforced per slice under 400 authored changed lines. A1 file surfaces are limited to `support/matrix.go`, `support/matrix_test.go`, and OpenSpec progress artifacts; exact OpenCode version evidence remains deferred until A3.
+
+### WU3 reduced slice tracking for issue `#29`
+
+- [x] WU3-A1 RED: Add failing focused `support.Load` and direct scanner tests for malformed/trailing/unknown/schema/missing-array/duplicate-key/case-variant/Unicode-fold/noncanonical-key/depth strict JSON failures. <!-- sdd-owner: implementation -->
+- [x] WU3-A1 GREEN: Implement strict JSON document scanning, exact envelope schemas, required non-null arrays, optional matrix `gate`, unknown-field rejection, duplicate-key rejection, ASCII lower-snake object keys, depth limit, and explicit `Entry` JSON tags without adding support rows. <!-- sdd-owner: implementation -->
+- [x] WU3-A1 TRIANGULATE: Prove Unicode values remain valid, strict generic envelopes with ID-only fixture/evidence records load, and checked-in zero-support registries remain empty. <!-- sdd-owner: implementation -->
+- [x] WU3-A1 REFACTOR: Keep strict scanning local to `support`, preserve `Validate`, and run focused plus full verification for this slice. <!-- sdd-owner: implementation -->
+- [x] WU3-A1 acceptance and rollback: record evidence that checked-in registries are empty, CLI support behavior is unchanged, A2/A3 metadata semantics are deferred, and rollback is limited to `support/matrix.go`, `support/matrix_test.go`, and WU3-A1 OpenSpec notes. <!-- sdd-owner: implementation -->
+- [ ] WU3-A2: Validate metadata integrity such as empty/duplicate IDs, repository URLs, tags, source paths, hashes, digests, row tuples, and evidence-to-fixture links. <!-- sdd-owner: implementation -->
+- [ ] WU3-A3: Pin selected exact OpenCode version evidence and fixture metadata while the production matrix remains unsupported. <!-- sdd-owner: implementation -->
+- [ ] WU3-B: Implement adapter conformance and activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->
+- [ ] WU3-C: Integrate WU3 support behavior into the app and close issue `#29` only from this final WU3 slice. <!-- sdd-owner: implementation -->
+
+The broad WU3 completion rows below remain unchecked until their exact slice owns and proves them; WU3-A1 does not claim exact version evidence, metadata integrity beyond the envelope, adapter behavior, or app support.
 
 - [ ] RED: Add failing conformance tests proving unsupported/unresolved status when exact version evidence, registry rows, fixtures, or semantic flags are missing; focused command: `go test ./support ./internal/adapter/opencode ./internal/app`. <!-- sdd-owner: implementation -->
 - [ ] GREEN: Register only the selected exact OpenCode evidence boundary, fixtures, and support matrix rows needed for the alpha; do not hardcode support in CLI/app. <!-- sdd-owner: implementation -->
@@ -87,7 +101,7 @@ Issue gate: blocked until a dedicated output/redaction/JSON Work Unit issue is a
 
 ## Work Unit 5: Human Renderer
 
-Issue gate: blocked until a dedicated human-renderer Work Unit issue is approved. Forecast: 120-240 authored lines. File surfaces: `internal/render/text/**`, CLI renderer selection tests, and docs snippets paired with behavior. This Work Unit remains separate from Work Unit 4 so the approved 13-PR chain has one bounded implementation PR per Work Unit.
+Issue gate: blocked until a dedicated human-renderer Work Unit issue is approved. Forecast: 120-240 authored lines. File surfaces: `internal/render/text/**`, CLI renderer selection tests, and docs snippets paired with behavior. This Work Unit remains separate from Work Unit 4 so the approved 17-PR chain has one bounded implementation PR per Work Unit.
 
 - [ ] RED: Add failing tests for concise deterministic text output, uncertainty first, no color dependency with `--no-color`, limitations visibility, and no raw sensitive values; focused command: `go test ./internal/render/text ./cmd/auditor`. <!-- sdd-owner: implementation -->
 - [ ] GREEN: Implement text renderer over redacted safe report only and wire CLI format selection without changing app semantics. <!-- sdd-owner: implementation -->
@@ -142,8 +156,8 @@ Issue gate: blocked until a dedicated pilot-pack Work Unit issue is approved; pi
 
 ## Human-Controlled Delivery Gates
 
-- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Issue `#19` is approved for comparison core, issue `#20` is approved for public identity, and issue `#21` is approved for planning only; Work Units 2-9 still require their own approvals. <!-- sdd-owner: parent -->
-- [x] Approved the corrected 13-PR total chain forecast: 4 planning PRs followed by 9 implementation PRs under `ask-on-risk` using `stacked-to-main`; no `size:exception` is authorized. <!-- sdd-owner: parent -->
+- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Issue `#19` is approved for comparison core, issue `#20` is approved for public identity, issue `#21` is approved for planning only, and issue `#29` is approved for the five WU3 slices; later Work Units still require their own approvals. <!-- sdd-owner: parent -->
+- [x] Approved the corrected 17-PR total chain forecast: 4 planning PRs, public identity, CLI/app shell, five WU3 implementation slices, and remaining implementation PRs under `ask-on-risk` using `stacked-to-main`; no `size:exception` is authorized. <!-- sdd-owner: parent -->
 - [x] Approved issue `#21` as the coherent planning authority for Planning PRs A-D; issue `#20` remains limited to public identity implementation. <!-- sdd-owner: parent -->
 - [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
 - [ ] Confirm the exact OpenCode version/evidence boundary before Work Unit 3 claims support. <!-- sdd-owner: parent -->
