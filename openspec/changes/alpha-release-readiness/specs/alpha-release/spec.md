@@ -94,6 +94,31 @@ The alpha CLI MUST operate only on explicit local input selected by the user and
 - THEN that behavior MUST be excluded from the alpha release
 - AND no release documentation MAY imply it is available.
 
+### Requirement: Deterministic CLI Identity and Help Behavior
+
+The alpha CLI MUST provide deterministic `auditor version` and help behavior for identical build metadata. Development builds MUST identify as `dev` and MUST NOT claim release identity. Unknown or invalid commands MUST be visible invalid requests, and transport behavior MUST perform no target I/O before a valid audit request exists.
+
+#### Scenario: Version and help are deterministic
+
+- GIVEN identical build metadata for the alpha CLI
+- WHEN `auditor version` and help output are requested repeatedly
+- THEN the reported version identity and help text MUST remain deterministic
+- AND development builds MUST identify as `dev` rather than a release version.
+
+#### Scenario: Development build cannot claim release identity
+
+- GIVEN an alpha CLI build without release metadata
+- WHEN version identity is displayed
+- THEN the CLI MUST identify the build as `dev`
+- AND it MUST NOT claim `v0.1.0-alpha.1` or any other release identity.
+
+#### Scenario: Invalid command is visible without target access
+
+- GIVEN a user supplies an unknown command or invalid command shape
+- WHEN the alpha CLI handles the request
+- THEN the request MUST be classified as invalid_request
+- AND no target I/O MAY occur before a valid audit request exists.
+
 ### Requirement: Deterministic Human and JSON Output
 
 The release MUST provide deterministic concise human output and deterministic versioned JSON output for identical supported inputs, declared environment, and tool version. JSON output MUST include schema version, target/version/support status, completeness, permissions or differences, findings, provenance digests, and limitations.
@@ -145,6 +170,46 @@ The release MUST classify malformed, unreadable, unsupported, unknown, ambiguous
 - WHEN the alpha CLI evaluates it deterministically
 - THEN the result MAY report success
 - AND the result MUST still include limitations for modeled static semantics.
+
+### Requirement: Stable Exit Categories and Codes
+
+The alpha CLI MUST expose stable exit categories and codes: `0` for `complete_no_findings`, `1` for `complete_with_findings`, `2` for `unsupported_or_incomplete`, `3` for `invalid_request`, and `4` for `operational_failure`. Unsupported or incomplete results MUST never map to exit code `0`. Redaction or rendering failures MUST map to exit code `4` and MUST emit no unsafe report.
+
+#### Scenario: Complete audit without findings exits zero
+
+- GIVEN a supported audit completes deterministically with complete evidence and no findings
+- WHEN the alpha CLI exits
+- THEN it MUST use category `complete_no_findings`
+- AND it MUST return exit code `0`.
+
+#### Scenario: Complete audit with findings exits one
+
+- GIVEN a supported audit completes deterministically with one or more findings
+- WHEN the alpha CLI exits
+- THEN it MUST use category `complete_with_findings`
+- AND it MUST return exit code `1`.
+
+#### Scenario: Unsupported or incomplete audit exits two
+
+- GIVEN selected input is unsupported, incomplete, ambiguous, unknown, lossy, or lacks required evidence
+- WHEN the alpha CLI exits
+- THEN it MUST use category `unsupported_or_incomplete`
+- AND it MUST return exit code `2` rather than `0`.
+
+#### Scenario: Invalid request exits three
+
+- GIVEN a user supplies an invalid command, missing required audit request, or invalid request shape
+- WHEN the alpha CLI exits
+- THEN it MUST use category `invalid_request`
+- AND it MUST return exit code `3`.
+
+#### Scenario: Operational failure exits four without unsafe report
+
+- GIVEN an operational failure occurs, including redaction or rendering failure
+- WHEN the alpha CLI exits
+- THEN it MUST use category `operational_failure`
+- AND it MUST return exit code `4`
+- AND it MUST emit no unsafe report.
 
 ### Requirement: Comparison Claim Boundary
 
