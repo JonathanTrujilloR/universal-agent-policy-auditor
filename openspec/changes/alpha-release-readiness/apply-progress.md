@@ -70,3 +70,28 @@ Status: complete for assigned WU2 only. Boundary: stacked-to-main implementation
 - Commands: focused RED/GREEN/TRIANGULATE/REFACTOR, repeated focused tests, race, `git diff --check`, `gofmt -l .`, `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed.
 - Acceptance: deterministic dev version/help; exact audit grammar; missing version/Claude well-formed requests return 2; malformed/relative/outside-root/mutation-like/help-trailing requests return 3; unknown app category and write errors map to 4; `t.TempDir()` config bytes/mode/modtime remain unchanged.
 - Remaining unchecked tasks are WU3-WU9 and parent-owned lifecycle gates. Rollback: remove `cmd/auditor/**`, `internal/app/**`, and WU2 task/progress edits only.
+
+
+## Work Unit 3-A1: Strict JSON and envelope integrity
+
+Status: complete for the reduced WU3-A1 slice only; boundary is implementation PR 7 of 17, intermediate `Refs #29`, with no stage, commit, push, PR, release, or review-lifecycle action.
+Chain context remains five WU3 slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence/fixture metadata with the production matrix still unsupported, B adapter conformance that activates only the proven row, and C app integration that closes `#29`.
+
+TDD evidence:
+- Safety net: `go test ./support` passed before edits.
+- RED: `go test ./support -run 'TestLoadRejectsStrictEnvelopeViolations|TestStrictJSONScannerBoundsDepthDirectly|TestLoadAcceptsStrictGenericEnvelopeWithIDOnlyRegistries' -count=1` failed before production edits on missing strict scanner plumbing.
+- GREEN: same focused strict JSON/envelope command passed after implementing scanner, envelopes, unknown-field checks, and `Entry` JSON tags.
+- TRIANGULATE: focused depth-limit, Unicode-value, generic-envelope, and zero-support cases passed.
+- REFACTOR: `gofmt -w support/matrix.go support/matrix_test.go && go test ./support -count=1` passed.
+
+Changed repo-relative paths:
+- `support/matrix.go`
+- `support/matrix_test.go`
+- `openspec/changes/alpha-release-readiness/tasks.md`
+- `openspec/changes/alpha-release-readiness/apply-progress.md`
+
+Acceptance: `support.Load` now requires exact schemas `support-matrix/v1`, `conformance-fixtures/v1`, and `support-evidence/v1`; requires non-null arrays `entries`, `fixtures`, and `evidence`; allows empty arrays; allows matrix `gate`; rejects malformed JSON, trailing documents, unknown modeled fields, recursive duplicate keys, noncanonical object keys, Unicode-confusable keys, uppercase/case variants, and nesting deeper than 8.
+Checked-in `matrix.json`, `fixtures.json`, and `evidence.json` remain unchanged with empty arrays, so support remains zero and existing unsupported CLI behavior is unchanged.
+Deferred: WU3-A2 owns metadata integrity such as empty/duplicate IDs, URLs, tags, source paths, hashes, digests, evidence links, and row tuples; WU3-A3 owns pinned evidence/fixture metadata while leaving the production matrix unsupported until WU3-B proves and activates one row.
+Rollback: revert `support/matrix.go`, `support/matrix_test.go`, the WU3-A1 task edits, and this progress block only.
+Final verification: `go test ./support -count=25`, `go test -race ./support -count=1`, `git diff --check`, `gofmt -l support/matrix.go support/matrix_test.go`, `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed; final diff was 307 insertions and 15 deletions across the four repo-relative paths.
