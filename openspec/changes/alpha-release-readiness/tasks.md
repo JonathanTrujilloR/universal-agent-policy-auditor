@@ -76,7 +76,7 @@ Issue gate: blocked until a dedicated OpenCode evidence Work Unit issue is appro
 
 ## Work Unit 4: Output, Redaction, and Versioned JSON
 
-Issue gate: blocked until a dedicated output/redaction/JSON Work Unit issue is approved. Forecast: 350-500 authored lines; split before 400, likely JSON/redaction first. File surfaces: `internal/redact/**`, `internal/render/json/**`, `internal/app/**` DTO handoff tests, schema docs if needed.
+Issue gate: blocked until a dedicated output/redaction/JSON Work Unit issue is approved. Forecast: 320-390 authored lines. File surfaces: `internal/redact/**`, `internal/render/json/**`, narrowly bounded `internal/app/**` DTO handoff tests, and schema docs if needed. This Work Unit MUST stop before apply if its refined forecast exceeds 390 lines; it MUST NOT absorb the human renderer or use `size:exception`.
 
 - [ ] RED: Add failing tests for redaction-before-rendering, no raw secrets/config values/private paths, schema `auditor-report/v1alpha1`, deterministic JSON field ordering, required fields, and safe provenance digests; focused command: `go test ./internal/redact ./internal/render/json ./internal/app`. <!-- sdd-owner: implementation -->
 - [ ] GREEN: Implement safe report conversion and JSON renderer that accepts only redacted DTOs and emits schema version, tool version, target/version/support status, completeness, permissions or differences, findings, provenance digests, exit category, and limitations. <!-- sdd-owner: implementation -->
@@ -85,9 +85,9 @@ Issue gate: blocked until a dedicated output/redaction/JSON Work Unit issue is a
 - [ ] Record acceptance evidence with sanitized fixture output proving no secret, credential, raw value, username, hostname, or absolute private path is emitted. <!-- sdd-owner: implementation -->
 - [ ] Record rollback boundary: revert `internal/redact`, `internal/render/json`, schema docs, and app DTO glue without changing adapter/model semantics. <!-- sdd-owner: implementation -->
 
-## Work Unit 5: Human Renderer if Separately Needed
+## Work Unit 5: Human Renderer
 
-Issue gate: blocked until a dedicated human-renderer Work Unit issue is approved, unless merged into Work Unit 4 while staying under budget. Forecast: 120-240 authored lines. File surfaces: `internal/render/text/**`, CLI renderer selection tests, docs snippets if paired with behavior.
+Issue gate: blocked until a dedicated human-renderer Work Unit issue is approved. Forecast: 120-240 authored lines. File surfaces: `internal/render/text/**`, CLI renderer selection tests, and docs snippets paired with behavior. This Work Unit remains separate from Work Unit 4 so the approved 13-PR chain has one bounded implementation PR per Work Unit.
 
 - [ ] RED: Add failing tests for concise deterministic text output, uncertainty first, no color dependency with `--no-color`, limitations visibility, and no raw sensitive values; focused command: `go test ./internal/render/text ./cmd/auditor`. <!-- sdd-owner: implementation -->
 - [ ] GREEN: Implement text renderer over redacted safe report only and wire CLI format selection without changing app semantics. <!-- sdd-owner: implementation -->
@@ -142,7 +142,7 @@ Issue gate: blocked until a dedicated pilot-pack Work Unit issue is approved; pi
 
 ## Human-Controlled Delivery Gates
 
-- [ ] Approve one issue per Work Unit before apply, including labels and scope; only #19 is currently approved and only as the comparison dependency. <!-- sdd-owner: parent -->
+- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Issue `#19` is approved for comparison core, issue `#20` is approved for public identity, and issue `#21` is approved for planning only; Work Units 2-9 still require their own approvals. <!-- sdd-owner: parent -->
 - [x] Approved the corrected 13-PR total chain forecast: 4 planning PRs followed by 9 implementation PRs under `ask-on-risk` using `stacked-to-main`; no `size:exception` is authorized. <!-- sdd-owner: parent -->
 - [x] Approved issue `#21` as the coherent planning authority for Planning PRs A-D; issue `#20` remains limited to public identity implementation. <!-- sdd-owner: parent -->
 - [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
