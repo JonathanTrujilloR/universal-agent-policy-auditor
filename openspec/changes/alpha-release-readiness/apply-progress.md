@@ -53,3 +53,20 @@ Status: complete for assigned Work Unit 1 only. Delivery boundary: stacked-to-ma
 - Assigned Work Unit 1: no unchecked implementation rows remain.
 - Non-WU1 implementation rows and parent-owned lifecycle gates remain unchecked in `tasks.md`; they are intentionally deferred.
 - Gatekeeper correction: restored the official Apache-2.0 header bytes, removed a private absolute workspace path, and synchronized the already-delivered Planning PR D state; repository metadata remains maintainer-controlled and unmodified.
+
+## Work Unit 2: CLI/App Shell
+
+Status: complete for assigned WU2 only. Boundary: stacked-to-main implementation PR 6 of 13, approved issue #27 (`status:approved`, `type:feature`); no stage/commit/push/GitHub metadata/tag/release action performed.
+
+### Structured status and TDD evidence
+- Status consumed: `alpha-release-readiness`, `openspec`, apply ready, repo-local actionContext, allowed edits limited to `cmd/auditor/**`, `internal/app/**`, and WU2 OpenSpec artifacts. Workload: WU2 only, stacked-to-main, final 396 authored additions+deletions, hard max 400, no `size:exception`.
+- RED: `go test ./cmd/auditor ./internal/app` first failed on missing app categories/request/exit mapping and CLI `run`; remediation RED failed on relative path, malformed help, Claude shape, and writer-error regressions.
+- GREEN/TRIANGULATE: added typed app shell and transport-only CLI, then required absolute root/config before lexical containment, validated paths before Claude unsupported, rejected help trailing args, and returned operational failure on write errors.
+- REFACTOR: removed unnecessary sleep/time test code; kept target semantics and target I/O out of `cmd/auditor`; app exposes no writer/process/network/Git/GitHub/config-update port and does not read target bytes.
+
+### Completed tasks, files, verification
+- WU2 RED, GREEN, TRIANGULATE, REFACTOR, acceptance evidence, and rollback boundary are checked in `tasks.md`.
+- Files: `cmd/auditor/main.go`, `cmd/auditor/main_test.go`, `internal/app/app.go`, `internal/app/app_test.go`, WU2 task/progress artifacts.
+- Commands: focused RED/GREEN/TRIANGULATE/REFACTOR, repeated focused tests, race, `git diff --check`, `gofmt -l .`, `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed.
+- Acceptance: deterministic dev version/help; exact audit grammar; missing version/Claude well-formed requests return 2; malformed/relative/outside-root/mutation-like/help-trailing requests return 3; unknown app category and write errors map to 4; `t.TempDir()` config bytes/mode/modtime remain unchanged.
+- Remaining unchecked tasks are WU3-WU9 and parent-owned lifecycle gates. Rollback: remove `cmd/auditor/**`, `internal/app/**`, and WU2 task/progress edits only.
