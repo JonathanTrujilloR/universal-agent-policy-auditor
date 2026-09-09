@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Recommended next PR slice: Planning PR D, the final planning slice. Planning PRs A-C are merged and approved issue `#21` governs the planning chain. Do not start source/docs apply until Planning PR D merges. Chain implication: use `stacked-to-main`; each planning and implementation slice targets `main`, references one coherent approved issue, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 5, Work Unit 1. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#20` governs this public identity slice. Chain implication: use `stacked-to-main`; each implementation slice targets `main`, references one coherent approved issue, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -37,20 +37,20 @@ Planning issue/reference policy: use one coherent approved planning issue only i
 - [x] Planning PR A delivered config, exploration, preproposal, and proposal in PR `#22` (361 authored changed lines), merged as `30d5732817300fdb2ee553e3618f957eb6805756` after independent structural/test verification. <!-- sdd-owner: implementation -->
 - [x] Planning PR B delivered the corrected alpha-release spec in PR `#23` (281 authored changed lines), merged as `ce546dba0aa9eda28f1b0b3e8774bdd37fa31fbd` after independent traceability/test verification. <!-- sdd-owner: implementation -->
 - [x] Planning PR C delivered the conservative architecture in PR `#24` (225 authored changed lines), merged as `2eccd0d59ef8e5dbd937dbba828061d306328e6f` after independent architecture/test verification. <!-- sdd-owner: implementation -->
-- [ ] Planning PR D: Deliver `openspec/changes/alpha-release-readiness/tasks.md` as the corrected task-plan slice; keep the final authored changed-line count for this PR below 400, or split tasks into an additional planning PR before apply. <!-- sdd-owner: implementation -->
-- [ ] Record planning delivery evidence: approved planning issue number or explicit maintainer-approved issue path, `Refs`/closing-reference policy, stacked-to-main order, changed-line counts, structural readback, and rollback boundary for each planning PR. <!-- sdd-owner: implementation -->
-- [ ] Keep implementation Work Units 1-9 pending until planning PRs are delivered and the maintainer approves the revised chain count and planning issue path. <!-- sdd-owner: implementation -->
+- [x] Planning PR D delivered this corrected task plan in PR `#25` (152 authored changed lines), merged as `cd4bd0904898530645b9cd3a6edab25c1b6e6ef1`, and closed planning issue `#21`. <!-- sdd-owner: implementation -->
+- [x] Planning delivery evidence records issue `#21`, intermediate `Refs #21`, the final closing reference, stacked-to-main order, per-PR counts, structural readback, and rollback boundaries across PRs `#22`-`#25`. <!-- sdd-owner: implementation -->
+- [x] Implementation Work Units 1-9 remained pending until all planning PRs were delivered and the maintainer approved the revised 13-PR chain. <!-- sdd-owner: implementation -->
 
 ## Work Unit 1: Public Project Identity, Legal, and Docs Baseline
 
 Issue gate: approved issue `#20` (`status:approved`, `type:docs`). Forecast: 120-250 authored lines. File surfaces: `LICENSE`, `README.md`, release-facing docs under `docs/` or `.github/` discovered during apply, repository metadata checklist documentation only.
 
-- [ ] RED: Add/adjust documentation checks or review fixtures that fail when Apache-2.0 identity is absent from `LICENSE`, `README.md`, and release-facing documentation; focused command: `go test ./...` if checks are Go-based, otherwise structural readback of changed Markdown/license files. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Add Apache-2.0 `LICENSE`, README positioning, alpha limitation language, and metadata checklist text without claiming OpenCode version support, Claude support, runtime enforcement, package-manager install, signing/provenance, or adoption. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Add a claim-boundary case covering missing/conflicting license or forbidden release claims; focused command matches the RED check or structural readback. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Tighten docs for scannability and reviewer verification; full evidence: `gofmt -l .`, `go vet ./...`, `go test ./...`, and Markdown/license readback as applicable. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence that every release-facing surface says Apache-2.0 consistently and that Claude/OpenCode/support limitations are visible. <!-- sdd-owner: implementation -->
-- [ ] Record rollback boundary: revert `LICENSE`, `README.md`, and identity docs/metadata checklist only, with no source/runtime changes. <!-- sdd-owner: implementation -->
+- [x] RED: Add/adjust documentation checks or review fixtures that fail when Apache-2.0 identity is absent from `LICENSE`, `README.md`, and release-facing documentation; focused command: `go test ./...` if checks are Go-based, otherwise structural readback of changed Markdown/license files. <!-- sdd-owner: implementation -->
+- [x] GREEN: Add Apache-2.0 `LICENSE`, README positioning, alpha limitation language, and metadata checklist text without claiming OpenCode version support, Claude support, runtime enforcement, package-manager install, signing/provenance, or adoption. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Add a claim-boundary case covering missing/conflicting license or forbidden release claims; focused command matches the RED check or structural readback. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Tighten docs for scannability and reviewer verification; full evidence: `gofmt -l .`, `go vet ./...`, `go test ./...`, and Markdown/license readback as applicable. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence that every release-facing surface says Apache-2.0 consistently and that Claude/OpenCode/support limitations are visible. <!-- sdd-owner: implementation -->
+- [x] Record rollback boundary: revert `LICENSE`, `README.md`, and identity docs/metadata checklist only, with no source/runtime changes. <!-- sdd-owner: implementation -->
 
 ## Work Unit 2: CLI/App Shell
 
