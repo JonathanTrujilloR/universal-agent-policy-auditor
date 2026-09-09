@@ -54,14 +54,14 @@ Issue gate: approved issue `#20` (`status:approved`, `type:docs`). Forecast: 120
 
 ## Work Unit 2: CLI/App Shell
 
-Issue gate: blocked until a dedicated CLI/app shell Work Unit issue is approved. Forecast: 250-390 authored lines. File surfaces: `cmd/auditor/**`, `internal/app/**`, narrow tests beside those packages, build metadata file if needed.
+Issue gate: approved issue `#27` (`status:approved`, `type:feature`). Forecast: 250-390 authored lines. File surfaces: `cmd/auditor/**`, `internal/app/**`, narrow tests beside those packages, build metadata file if needed.
 
-- [ ] RED: Add failing focused tests for `auditor version`, help/invalid request handling, stable exit categories, explicit `audit opencode --root --config --opencode-version`, and no mutation of `t.TempDir()` target files; focused command: `go test ./cmd/auditor ./internal/app`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Implement transport-only `cmd/auditor` and typed `internal/app` request/result shell with build metadata defaults, exit category mapping, explicit input validation, and no writer/process/network/Git/GitHub ports. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Add unsupported `claudecode`, unsupported/missing OpenCode version, outside-root config, and mutation-like command cases; focused command: `go test ./cmd/auditor ./internal/app`. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Keep CLI parsing out of semantic packages and app results independent of renderer DTOs; full command: `gofmt -l . && go vet ./... && go test ./... && go build ./...`. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence for deterministic version/help behavior, numeric/category exits `0-4`, explicit local input, and unchanged target file snapshots. <!-- sdd-owner: implementation -->
-- [ ] Record rollback boundary: remove `cmd/auditor` and `internal/app` shell without touching existing `internal/source`, `internal/adapter`, `internal/model`, or `support` semantics. <!-- sdd-owner: implementation -->
+- [x] RED: Add failing focused tests for `auditor version`, help/invalid request handling, stable exit categories, explicit `audit opencode --root --config --opencode-version`, and no mutation of `t.TempDir()` target files; focused command: `go test ./cmd/auditor ./internal/app`. <!-- sdd-owner: implementation -->
+- [x] GREEN: Implement transport-only `cmd/auditor` and typed `internal/app` request/result shell with build metadata defaults, exit category mapping, explicit input validation, and no writer/process/network/Git/GitHub ports. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Add unsupported `claudecode`, unsupported/missing OpenCode version, outside-root config, and mutation-like command cases; focused command: `go test ./cmd/auditor ./internal/app`. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Keep CLI parsing out of semantic packages and app results independent of renderer DTOs; full command: `gofmt -l . && go vet ./... && go test ./... && go build ./...`. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence for deterministic version/help behavior, numeric/category exits `0-4`, explicit local input, and unchanged target file snapshots. <!-- sdd-owner: implementation -->
+- [x] Record rollback boundary: remove `cmd/auditor` and `internal/app` shell without touching existing `internal/source`, `internal/adapter`, `internal/model`, or `support` semantics. <!-- sdd-owner: implementation -->
 
 ## Work Unit 3: OpenCode Evidence Gate
 
