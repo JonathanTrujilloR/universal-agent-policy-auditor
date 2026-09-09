@@ -7,7 +7,7 @@ context: |
   Scope: local read-only OpenCode and Claude Code policy discovery, parsing, audit, and comparison.
   Safety: unknown, unsupported, ambiguous, and lossy semantics block unqualified success.
   Testing: Go module with executable package tests; `go test ./...`, `go vet ./...`, `go build ./...`, and `gofmt -l .` are available. Strict TDD is active.
-  Artifact store: hybrid OpenSpec files plus Engram project observations.
+  Artifact store: OpenSpec files for this alpha release program.
 
 strict_tdd: true
 
