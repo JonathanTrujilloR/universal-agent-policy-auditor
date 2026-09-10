@@ -1,7 +1,10 @@
 package support
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -114,31 +117,89 @@ func TestStrictJSONScannerBoundsDepthDirectly(t *testing.T) {
 }
 
 func TestLoadAllowsUnicodeValuesButNotUnicodeKeys(t *testing.T) {
-	matrix, err := Load(supportFS(map[string]string{
-		"matrix.json":   `{"schema":"support-matrix/v1","entries":[],"gate":"valeur-unicodé"}`,
-		"fixtures.json": `{"schema":"conformance-fixtures/v1","fixtures":[{"id":"fixturé"}]}`,
-		"evidence.json": `{"schema":"support-evidence/v1","evidence":[{"id":"évidence"}]}`,
-	}))
-	if err != nil {
-		t.Fatalf("Load rejected Unicode string values: %v", err)
-	}
-	if !matrix.Registry.Fixtures["fixturé"] || !matrix.Registry.Evidence["évidence"] {
-		t.Fatalf("registry did not preserve Unicode values: %+v", matrix.Registry)
+	matrix, err := Load(supportFS(map[string]string{"matrix.json": `{"schema":"support-matrix/v1","entries":[],"gate":"valeur-unicodé"}`}))
+	if err != nil || len(matrix.Entries) != 0 {
+		t.Fatalf("Load rejected Unicode string value: matrix=%+v err=%v", matrix, err)
 	}
 }
 
-func TestLoadAcceptsStrictGenericEnvelopeWithIDOnlyRegistries(t *testing.T) {
-	matrix, err := Load(supportFS(map[string]string{
-		"matrix.json":   `{"schema":"support-matrix/v1","entries":[{"target":"opencode","version":"1","construct":"permission","fixture":"fixture","evidence":"evidence","permission_bearing":true,"defaults_known":true,"matcher_known":true,"conditions_known":true}],"gate":"optional note"}`,
-		"fixtures.json": `{"schema":"conformance-fixtures/v1","fixtures":[{"id":"fixture"}]}`,
-		"evidence.json": `{"schema":"support-evidence/v1","evidence":[{"id":"evidence"}]}`,
-	}))
+func TestLoadAcceptsStrictGenericMetadata(t *testing.T) {
+	matrix, err := Load(metadataFS(nil))
 	if err != nil {
 		t.Fatalf("Load returned err=%v", err)
 	}
 	entry := matrix.Entries[0]
 	if result := Validate(matrix, entry); result.Completeness != model.CompletenessComplete {
 		t.Fatalf("Validate result=%+v", result)
+	}
+	if !matrix.Registry.Fixtures["fixture"] || !matrix.Registry.Evidence["evidence"] {
+		t.Fatalf("registry did not include validated records: %+v", matrix.Registry)
+	}
+}
+
+func TestLoadRejectsMetadataIntegrityFailures(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		mutate func(*metadataDocs)
+	}{
+		{"matrix missing target", func(d *metadataDocs) { replaceOnce(&d.matrix, `"target":"target",`, ``) }},
+		{"fixture surrounding whitespace id", func(d *metadataDocs) { replaceOnce(&d.fixtures, `"id":"fixture"`, `"id":" fixture"`) }},
+		{"evidence whitespace claim", func(d *metadataDocs) { replaceOnce(&d.evidence, `"claim:defaults"`, `" claim:defaults"`) }},
+		{"source surrounding whitespace path", func(d *metadataDocs) { replaceOnce(&d.evidence, `"docs/source.md"`, `"docs/source.md "`) }},
+		{"uppercase commit", func(d *metadataDocs) { replaceOnce(&d.evidence, strings.Repeat("b", 40), strings.Repeat("B", 40)) }},
+		{"short commit", func(d *metadataDocs) { replaceOnce(&d.evidence, strings.Repeat("b", 40), strings.Repeat("b", 39)) }},
+		{"uppercase fixture sha", func(d *metadataDocs) { replaceOnce(&d.fixtures, fixtureHash(), strings.ToUpper(fixtureHash())) }},
+		{"short source sha", func(d *metadataDocs) { replaceOnce(&d.evidence, strings.Repeat("a", 64), strings.Repeat("a", 63)) }},
+		{"dot fixture path", func(d *metadataDocs) { replaceOnce(&d.fixtures, "fixtures/generic.txt", ".") }},
+		{"escaping fixture path", func(d *metadataDocs) { replaceOnce(&d.fixtures, "fixtures/generic.txt", "../generic.txt") }},
+		{"unreadable fixture path", func(d *metadataDocs) { replaceOnce(&d.fixtures, "fixtures/generic.txt", "fixtures/missing.txt") }},
+		{"mismatched fixture sha", func(d *metadataDocs) { replaceOnce(&d.fixtures, fixtureHash(), strings.Repeat("c", 64)) }},
+		{"empty claims", func(d *metadataDocs) {
+			replaceOnce(&d.evidence, `"claims":["claim:defaults","claim:matcher"]`, `"claims":[]`)
+		}},
+		{"duplicate claims", func(d *metadataDocs) { replaceOnce(&d.evidence, `"claim:matcher"`, `"claim:defaults"`) }},
+		{"empty sources", func(d *metadataDocs) {
+			replaceOnce(&d.evidence, `"sources":[{"path":"docs/source.md","sha256":"`+strings.Repeat("a", 64)+`"}]`, `"sources":[]`)
+		}},
+		{"duplicate source paths", func(d *metadataDocs) {
+			replaceOnce(&d.evidence, `}]}`, `},{"path":"docs/source.md","sha256":"`+strings.Repeat("a", 64)+`"}]}`)
+		}},
+		{"invalid source path", func(d *metadataDocs) { replaceOnce(&d.evidence, "docs/source.md", "docs//source.md") }},
+		{"dot source path", func(d *metadataDocs) { replaceOnce(&d.evidence, "docs/source.md", ".") }},
+		{"duplicate fixture IDs", func(d *metadataDocs) {
+			replaceOnce(&d.fixtures, `]}`, `,{"id":"fixture","target":"target","version":"1","construct":"permission","path":"fixtures/generic.txt","sha256":"`+fixtureHash()+`"}]}`)
+		}},
+		{"duplicate evidence IDs", func(d *metadataDocs) {
+			replaceOnce(&d.evidence, `]}`, `,{"id":"evidence","target":"target","version":"1","construct":"permission","fixture":"fixture","authority":{"repository":"https://github.com/owner/repo","tag":"v1.18.27","commit":"`+strings.Repeat("b", 40)+`"},"claims":["claim:other"],"sources":[{"path":"docs/other.md","sha256":"`+strings.Repeat("a", 64)+`"}]}]}`)
+		}},
+		{"duplicate matrix triples", func(d *metadataDocs) {
+			replaceOnce(&d.matrix, `]`, `,{"target":"target","version":"1","construct":"permission","fixture":"fixture","evidence":"evidence","permission_bearing":true,"defaults_known":true,"matcher_known":true,"conditions_known":true}]`)
+		}},
+		{"orphan evidence fixture", func(d *metadataDocs) { replaceOnce(&d.evidence, `"fixture":"fixture"`, `"fixture":"missing"`) }},
+		{"orphan evidence tuple", func(d *metadataDocs) {
+			d.matrix = `{"schema":"support-matrix/v1","entries":[]}`
+			replaceOnce(&d.evidence, `"target":"target"`, `"target":"other"`)
+		}},
+		{"matrix missing fixture", func(d *metadataDocs) { replaceOnce(&d.matrix, `"fixture":"fixture"`, `"fixture":"missing"`) }},
+		{"matrix missing evidence", func(d *metadataDocs) { replaceOnce(&d.matrix, `"evidence":"evidence"`, `"evidence":"missing"`) }},
+		{"matrix fixture tuple mismatch", func(d *metadataDocs) { replaceOnce(&d.fixtures, `"construct":"permission"`, `"construct":"other"`) }},
+		{"matrix evidence tuple mismatch", func(d *metadataDocs) { replaceOnce(&d.evidence, `"version":"1"`, `"version":"2"`) }},
+		{"matrix evidence fixture mismatch", func(d *metadataDocs) {
+			replaceOnce(&d.evidence, `"fixture":"fixture"`, `"fixture":"fixture-two"`)
+			replaceOnce(&d.fixtures, `]}`, `,{"id":"fixture-two","target":"target","version":"1","construct":"permission","path":"fixtures/generic.txt","sha256":"`+fixtureHash()+`"}]}`)
+		}},
+	} {
+		t.Run(tt.name, func(t *testing.T) { expectLoadError(t, tt.mutate) })
+	}
+	for _, repo := range []string{"http://github.com/owner/.github", "https://user@github.com/owner/.github", "https://github.com:443/owner/.github", "https://github.com/owner/.github?x=1", "https://github.com/owner/.github#frag", "https://github.com/owner/.github/extra", "https://github.com/owner/.github/", "https://github.com/owner/./repo", "https://github.com/ow ner/repo", "https://github.com/owner/re%70o", "https://github.com/a--b/repo"} {
+		t.Run("repo/"+repo, func(t *testing.T) {
+			expectLoadError(t, func(d *metadataDocs) { replaceOnce(&d.evidence, "https://github.com/owner/.github", repo) })
+		})
+	}
+	for _, tag := range []string{".", "..", "bad tag", "bad\n", "/v1", "v1/", ".v1", "v1.", "v//1", "v@{1", "v1.lock", "v~1", "v^1", "v:1", "v?1", "v*1", "v[1", `v\\1`} {
+		t.Run("tag/"+tag, func(t *testing.T) {
+			expectLoadError(t, func(d *metadataDocs) { replaceOnce(&d.evidence, `"tag":"v1.18.27"`, fmt.Sprintf(`"tag":%q`, tag)) })
+		})
 	}
 }
 
@@ -148,6 +209,38 @@ func TestLoadConsumesConfiguredZeroSupportRegistry(t *testing.T) {
 		t.Fatalf("matrix=%+v err=%v", matrix, err)
 	}
 }
+
+type metadataDocs struct{ matrix, fixtures, evidence string }
+
+const fixtureBytes = "generic fixture\n"
+
+func metadataFS(mutate func(*metadataDocs)) fstest.MapFS {
+	docs := metadataDocs{
+		matrix:   `{"schema":"support-matrix/v1","entries":[{"target":"target","version":"1","construct":"permission","fixture":"fixture","evidence":"evidence","permission_bearing":true,"defaults_known":true,"matcher_known":true,"conditions_known":true}],"gate":"optional note"}`,
+		fixtures: `{"schema":"conformance-fixtures/v1","fixtures":[{"id":"fixture","target":"target","version":"1","construct":"permission","path":"fixtures/generic.txt","sha256":"` + fixtureHash() + `"}]}`,
+		evidence: `{"schema":"support-evidence/v1","evidence":[{"id":"evidence","target":"target","version":"1","construct":"permission","fixture":"fixture","authority":{"repository":"https://github.com/owner/.github","tag":"v1.18.27","commit":"` + strings.Repeat("b", 40) + `"},"claims":["claim:defaults","claim:matcher"],"sources":[{"path":"docs/source.md","sha256":"` + strings.Repeat("a", 64) + `"}]}]}`,
+	}
+	if mutate != nil {
+		mutate(&docs)
+	}
+	return supportFS(map[string]string{
+		"matrix.json":          docs.matrix,
+		"fixtures.json":        docs.fixtures,
+		"evidence.json":        docs.evidence,
+		"fixtures/generic.txt": fixtureBytes,
+	})
+}
+
+func expectLoadError(t *testing.T, mutate func(*metadataDocs)) {
+	t.Helper()
+	if _, err := Load(metadataFS(mutate)); err == nil {
+		t.Fatal("Load accepted invalid metadata")
+	}
+}
+
+func fixtureHash() string { return fmt.Sprintf("%x", sha256.Sum256([]byte(fixtureBytes))) }
+
+func replaceOnce(s *string, old, new string) { *s = strings.Replace(*s, old, new, 1) }
 
 func supportFS(overrides map[string]string) fstest.MapFS {
 	docs := map[string]string{

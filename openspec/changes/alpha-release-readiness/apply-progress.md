@@ -75,7 +75,7 @@ Status: complete for assigned WU2 only. Boundary: stacked-to-main implementation
 ## Work Unit 3-A1: Strict JSON and envelope integrity
 
 Status: complete for the reduced WU3-A1 slice only; boundary is implementation PR 7 of 17, intermediate `Refs #29`, with no stage, commit, push, PR, release, or review-lifecycle action.
-Chain context remains five WU3 slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence/fixture metadata with the production matrix still unsupported, B adapter conformance that activates only the proven row, and C app integration that closes `#29`.
+Chain context remains five WU3 slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence/fixture metadata with the production matrix still unsupported, B adapter conformance that activates only the proven row, and C app integration; Issue #29 remains open until WU3-C.
 
 TDD evidence:
 - Safety net: `go test ./support` passed before edits.
@@ -95,3 +95,32 @@ Checked-in `matrix.json`, `fixtures.json`, and `evidence.json` remain unchanged 
 Deferred: WU3-A2 owns metadata integrity such as empty/duplicate IDs, URLs, tags, source paths, hashes, digests, evidence links, and row tuples; WU3-A3 owns pinned evidence/fixture metadata while leaving the production matrix unsupported until WU3-B proves and activates one row.
 Rollback: revert `support/matrix.go`, `support/matrix_test.go`, the WU3-A1 task edits, and this progress block only.
 Final verification: `go test ./support -count=25`, `go test -race ./support -count=1`, `git diff --check`, `gofmt -l support/matrix.go support/matrix_test.go`, `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed; final diff was 307 insertions and 15 deletions across the four repo-relative paths.
+
+## Work Unit 3-A2: Support metadata integrity
+
+Status: complete for WU3-A2 only; boundary is implementation PR 8 of 17, intermediate `Refs #29`. Issue #29 remains open until WU3-C; no stage, commit, push, PR, release, or review-lifecycle action performed.
+
+### Structured status and workload
+- Parent-selected change: `alpha-release-readiness`; artifact store: `openspec`; mode: repo-local; allowed edits limited to `support/matrix.go`, `support/matrix_test.go`, this tasks file, and this progress file.
+- Workload guard resolved as `stacked-to-main`, WU3-A2 slice only, hard maximum 400 authored changed lines, no `size:exception`.
+
+### TDD Cycle Evidence
+| Phase | Evidence |
+|---|---|
+| SAFETY | `go test ./support -count=1` passed before production edits. |
+| RED | Focused A2 metadata tests first failed on missing strict fixture/evidence metadata fields. |
+| GREEN | Added tagged metadata records and fail-closed validation; focused A2 tests passed. |
+| TRIANGULATE | Added table cases for scalar whitespace, repo/tag/commit/SHA/path/claim/source/reference/triple failures; `go test ./support -count=1` passed. |
+| REFACTOR | Consolidated validation helpers, documented lexical fs.FS fixture confinement, and reran focused package tests. |
+
+### Acceptance, deferrals, and rollback
+- `support.Load` now validates explicit fixture, evidence, authority, and source records before registry maps are built.
+- Authority repository validation is offline and limited to canonical GitHub HTTPS repository-root URLs; tags and commits are lexical only.
+- Fixture paths are trimmed non-dot `fs.ValidPath` names read from the supplied `fs.FS` and SHA-256 checked; this is lexical fs-relative validation, not OS or symlink sandboxing.
+- Source paths are trimmed non-dot unique `fs.ValidPath` upstream names; they are not read locally and remain pinned source metadata for A3.
+- Checked registries are unchanged and empty; `matrix.json`, `fixtures.json`, and `evidence.json` keep empty arrays, so support remains zero.
+- Remaining WU3 slice lines: `- [ ] WU3-A3: Pin selected exact OpenCode version evidence and fixture metadata while the production matrix remains unsupported. <!-- sdd-owner: implementation -->`; `- [ ] WU3-B: Implement adapter conformance and activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->`; `- [ ] WU3-C: Integrate WU3 support behavior into the app; Issue #29 remains open until WU3-C. <!-- sdd-owner: implementation -->`; broad WU3 rows remain unchanged/unchecked.
+- RED command: `go test ./support -run 'TestLoadAcceptsStrictGenericMetadata|TestLoadRejectsMetadataIntegrityFailures' -count=1` failed before production correction; focused A2 tests passed after implementation.
+- Final verification: `go test ./support -count=25`, `go test -race ./support -count=1`, `git diff --check`, `gofmt -l support/matrix.go support/matrix_test.go`, `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed.
+- Final diff: 364 insertions and 34 deletions, 398 authored changed lines across the four allowed paths.
+- Rollback: revert `support/matrix.go`, `support/matrix_test.go`, WU3-A2 task checkbox/current-slice text, and this progress block.
