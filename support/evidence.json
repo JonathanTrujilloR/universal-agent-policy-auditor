@@ -1,4 +1,46 @@
 {
   "schema": "support-evidence/v1",
-  "evidence": []
+  "evidence": [
+    {
+      "id": "opencode-1.18.27-legacy-permission-scalar-source",
+      "target": "opencode",
+      "version": "1.18.27",
+      "construct": "permission",
+      "fixture": "opencode-1.18.27-legacy-permission-scalar",
+      "authority": {
+        "repository": "https://github.com/anomalyco/opencode",
+        "tag": "v1.18.27",
+        "commit": "4b7e19e315cca414121ba1d61523fef74bb3ae8b"
+      },
+      "claims": [
+        "root-permission-legacy-info",
+        "legacy-actions-scalar-resource-map",
+        "scalar-migrates-wildcard-action-effect",
+        "v2-ordered-last-wildcard-fallback-ask",
+        "runtime-effective-policy-out-of-scope"
+      ],
+      "sources": [
+        {
+          "path": "packages/core/src/v1/config/config.ts",
+          "sha256": "b99bcbd98df6da79e59cda482363f759cea9d4b9792c6c8e83b6a8d686138d30"
+        },
+        {
+          "path": "packages/core/src/v1/config/permission.ts",
+          "sha256": "f7669733d939c4affd38c4a27ce14deff970c7ffa4e26071ce6a3cd39ce0d4dd"
+        },
+        {
+          "path": "packages/core/src/v1/config/migrate.ts",
+          "sha256": "2a23a56469575d3edfe2044fe52468ee499d1c1c2281c34ebbcb624c7b25dae6"
+        },
+        {
+          "path": "packages/schema/src/permission.ts",
+          "sha256": "229f2da7d245bf86deffed59b10cddf2dd04ffa05d10ef97fc5df289d0e6fb98"
+        },
+        {
+          "path": "packages/core/src/permission.ts",
+          "sha256": "f5d5b295452f2ddf17c475a24e77e302bb2b4b65d8a9e02a0f7bc5ef5504a0ba"
+        }
+      ]
+    }
+  ]
 }

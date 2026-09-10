@@ -1,4 +1,13 @@
 {
   "schema": "conformance-fixtures/v1",
-  "fixtures": []
+  "fixtures": [
+    {
+      "id": "opencode-1.18.27-legacy-permission-scalar",
+      "target": "opencode",
+      "version": "1.18.27",
+      "construct": "permission",
+      "path": "testdata/opencode-1.18.27-permission-legacy-scalar.json",
+      "sha256": "22ab8de00a73350aedcb72b62db5c962c910f15e12fbef80d844e725593bacf9"
+    }
+  ]
 }
