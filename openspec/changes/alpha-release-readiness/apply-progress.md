@@ -124,3 +124,27 @@ Status: complete for WU3-A2 only; boundary is implementation PR 8 of 17, interme
 - Final verification: `go test ./support -count=25`, `go test -race ./support -count=1`, `git diff --check`, `gofmt -l support/matrix.go support/matrix_test.go`, `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed.
 - Final diff: 364 insertions and 34 deletions, 398 authored changed lines across the four allowed paths.
 - Rollback: revert `support/matrix.go`, `support/matrix_test.go`, WU3-A2 task checkbox/current-slice text, and this progress block.
+
+## Work Unit 3-A3: Pinned OpenCode evidence and fixture metadata
+Status: complete for WU3-A3 only; boundary is intermediate PR 9 of 17, `Refs #29`, with no stage, commit, push, PR, release, review, tag, or publication action.
+Structured status consumed: parent-selected `alpha-release-readiness`, `openspec`, repo-local; allowed edits were limited to WU3-A3 support registries/fixture/docs/tests and OpenSpec task/progress artifacts.
+Workload guard: explicit stacked-to-main delivery path, hard <=400 authored changed lines, no `size:exception`; final authored count: 322 additions+deletions.
+TDD Cycle Evidence:
+| Phase | Evidence |
+|---|---|
+| SAFETY | `go test ./support -count=1` passed before edits. |
+| RED | Added pinned registry/manifest/fixture tests first; focused commands failed on empty checked-in registries and the absent fixture, including the fixture data-drift sentinel. |
+| GREEN | Added only `support/testdata/opencode-1.18.27-permission-legacy-scalar.json`, one fixture record, one evidence record, and evidence docs; focused pinned tests passed. |
+| TRIANGULATE | Wrong-pinned authority/source equality, fixture digest/data drift, zero matrix entries, unsupported `Validate`, and CLI exit 2 boundaries are covered by focused tests. |
+| REFACTOR | `gofmt -w support/matrix_test.go` then focused support tests passed; no production code changed. |
+Changed files: `support/fixtures.json`, `support/evidence.json`, `support/evidence.md`, `support/testdata/opencode-1.18.27-permission-legacy-scalar.json`, `support/matrix_test.go`, this tasks file, and this progress file.
+Fixture SHA-256: `22ab8de00a73350aedcb72b62db5c962c910f15e12fbef80d844e725593bacf9`; fixture has only scalar `read:allow`, `edit:deny`, and `bash:ask` under singular `permission`.
+Authority: `anomalyco/opencode` tag `v1.18.27`, direct tag commit `4b7e19e315cca414121ba1d61523fef74bb3ae8b`, release URL available; source hashes are the five exact checked values, including corrected V2 hash `229f2da7d245bf86deffed59b10cddf2dd04ffa05d10ef97fc5df289d0e6fb98`.
+Claims: `root-permission-legacy-info`, `legacy-actions-scalar-resource-map`, `scalar-migrates-wildcard-action-effect`, `v2-ordered-last-wildcard-fallback-ask`, and `runtime-effective-policy-out-of-scope`.
+Zero-support statement: `support/matrix.json` and `support/matrix.go` are byte-unchanged, matrix entries remain empty, `support.Load` validates registries, `Validate` stays `unsupported-version`, and the OpenCode CLI request exits 2.
+Verification passed: `go test ./support -run 'TestCheckedInOpenCodePinnedRegistryEvidenceAndFixture' -count=1`; `go test ./support -run 'TestCheckedInOpenCodeRegistryRejectsFixtureDataDrift|TestLoadConsumesConfiguredPinnedOpenCodeRegistryWithoutSupportRows|TestCheckedInOpenCodeAuditCLIStillExitsUnsupported' -count=1`.
+Verification passed: `go test ./support -count=25`; `go test -race ./support -count=1`; `git diff --check`; `test -z "$(gofmt -l support/matrix_test.go)"`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
+Completed task checkbox update: WU3-A3 is checked in `tasks.md`; WU3-B, WU3-C, and broad WU3 rows remain unchecked.
+Remaining exact unchecked rows: `- [ ] WU3-B: Implement adapter conformance and activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->`; `- [ ] WU3-C: Integrate WU3 support behavior into the app; Issue #29 remains open until WU3-C. <!-- sdd-owner: implementation -->`; broad WU3 rows remain deferred.
+Rollback boundary: revert the WU3-A3 fixture, fixture/evidence registries, evidence docs, pinned tests, the WU3-A3 checkbox, and this progress block only.
+Deviations: none from the assigned slice; runtime effective policy, agents/modes, saved approvals, multiple sources, V2 arrays, resource maps, enforcement, security, and compliance remain excluded.

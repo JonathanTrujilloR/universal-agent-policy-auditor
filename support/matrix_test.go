@@ -2,8 +2,11 @@ package support
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -203,10 +206,104 @@ func TestLoadRejectsMetadataIntegrityFailures(t *testing.T) {
 	}
 }
 
-func TestLoadConsumesConfiguredZeroSupportRegistry(t *testing.T) {
+func TestLoadConsumesConfiguredPinnedOpenCodeRegistryWithoutSupportRows(t *testing.T) {
 	matrix, err := Load(os.DirFS("."))
-	if err != nil || len(matrix.Entries) != 0 || len(matrix.Registry.Fixtures) != 0 || len(matrix.Registry.Evidence) != 0 {
-		t.Fatalf("matrix=%+v err=%v", matrix, err)
+	if err != nil {
+		t.Fatalf("Load returned err=%v", err)
+	}
+	if len(matrix.Entries) != 0 {
+		t.Fatalf("matrix entries=%+v, want zero production support rows", matrix.Entries)
+	}
+	if !matrix.Registry.Fixtures[openCodeLegacyFixtureID] || len(matrix.Registry.Fixtures) != 1 {
+		t.Fatalf("fixture registry=%+v", matrix.Registry.Fixtures)
+	}
+	if !matrix.Registry.Evidence[openCodeLegacyEvidenceID] || len(matrix.Registry.Evidence) != 1 {
+		t.Fatalf("evidence registry=%+v", matrix.Registry.Evidence)
+	}
+	result := Validate(matrix, Entry{Target: "opencode", Version: "1.18.27", Construct: "permission", PermissionBearing: true})
+	if result.Completeness != model.CompletenessIncomplete || !hasCode(result.Findings, "unsupported-version") {
+		t.Fatalf("Validate result=%+v", result)
+	}
+}
+
+func TestCheckedInOpenCodePinnedRegistryEvidenceAndFixture(t *testing.T) {
+	fixtures, evidence := readCheckedInSupportDocs(t)
+	if len(fixtures.Fixtures) != 1 {
+		t.Fatalf("fixture records=%d", len(fixtures.Fixtures))
+	}
+	fixture := fixtures.Fixtures[0]
+	if fixture.ID != openCodeLegacyFixtureID || fixture.Target != "opencode" || fixture.Version != "1.18.27" || fixture.Construct != "permission" || fixture.Path != openCodeLegacyFixturePath || fixture.SHA256 != openCodeLegacyFixtureSHA256 {
+		t.Fatalf("fixture=%+v", fixture)
+	}
+	data, err := os.ReadFile(fixture.Path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := fmt.Sprintf("%x", sha256.Sum256(data)); got != openCodeLegacyFixtureSHA256 {
+		t.Fatalf("fixture digest=%s", got)
+	}
+	var body map[string]json.RawMessage
+	if err := json.Unmarshal(data, &body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body) != 1 || body["permission"] == nil {
+		t.Fatalf("fixture has extra top-level semantics: %+v", body)
+	}
+	var permission map[string]string
+	if err := json.Unmarshal(body["permission"], &permission); err != nil {
+		t.Fatal(err)
+	}
+	if len(permission) != 3 || permission["read"] != "allow" || permission["edit"] != "deny" || permission["bash"] != "ask" {
+		t.Fatalf("permission=%+v", permission)
+	}
+
+	if len(evidence.Evidence) != 1 {
+		t.Fatalf("evidence records=%d", len(evidence.Evidence))
+	}
+	record := evidence.Evidence[0]
+	if record.ID != openCodeLegacyEvidenceID || record.Target != fixture.Target || record.Version != fixture.Version || record.Construct != fixture.Construct || record.Fixture != fixture.ID {
+		t.Fatalf("evidence tuple=%+v fixture=%+v", record, fixture)
+	}
+	if record.Authority.Repository != "https://github.com/anomalyco/opencode" || record.Authority.Tag != "v1.18.27" || record.Authority.Commit != "4b7e19e315cca414121ba1d61523fef74bb3ae8b" {
+		t.Fatalf("authority=%+v", record.Authority)
+	}
+	assertStrings(t, record.Claims, openCodeLegacyClaims)
+	if len(record.Sources) != len(openCodeLegacySources) {
+		t.Fatalf("sources=%+v", record.Sources)
+	}
+	for i, source := range record.Sources {
+		if source != openCodeLegacySources[i] {
+			t.Fatalf("source[%d]=%+v want %+v", i, source, openCodeLegacySources[i])
+		}
+	}
+}
+
+func TestCheckedInOpenCodeRegistryRejectsFixtureDataDrift(t *testing.T) {
+	if _, err := Load(checkedInOpenCodeFS(t, func(files map[string]string) {
+		files[openCodeLegacyFixturePath] = strings.Replace(files[openCodeLegacyFixturePath], `"allow"`, `"deny"`, 1)
+	})); err == nil {
+		t.Fatal("Load accepted fixture bytes that no longer match the pinned digest")
+	}
+}
+
+func TestCheckedInOpenCodeAuditCLIStillExitsUnsupported(t *testing.T) {
+	repoRoot, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	binary := filepath.Join(t.TempDir(), "auditor")
+	build := exec.Command("go", "build", "-o", binary, "./cmd/auditor")
+	build.Dir = repoRoot
+	if output, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("go build err=%v output=%q", err, output)
+	}
+	cmd := exec.Command(binary, "audit", "opencode", "--root", repoRoot, "--config", filepath.Join(repoRoot, "support", openCodeLegacyFixturePath), "--opencode-version", "1.18.27")
+	output, err := cmd.CombinedOutput()
+	if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() != 2 {
+		t.Fatalf("auditor exit err=%v output=%q", err, output)
+	}
+	if !strings.Contains(string(output), "unsupported_or_incomplete") {
+		t.Fatalf("output=%q", output)
 	}
 }
 
@@ -256,6 +353,70 @@ func supportFS(overrides map[string]string) fstest.MapFS {
 		files[name] = &fstest.MapFile{Data: []byte(body)}
 	}
 	return files
+}
+
+const (
+	openCodeLegacyFixtureID     = "opencode-1.18.27-legacy-permission-scalar"
+	openCodeLegacyEvidenceID    = "opencode-1.18.27-legacy-permission-scalar-source"
+	openCodeLegacyFixturePath   = "testdata/opencode-1.18.27-permission-legacy-scalar.json"
+	openCodeLegacyFixtureSHA256 = "22ab8de00a73350aedcb72b62db5c962c910f15e12fbef80d844e725593bacf9"
+)
+
+var openCodeLegacyClaims = []string{
+	"root-permission-legacy-info",
+	"legacy-actions-scalar-resource-map",
+	"scalar-migrates-wildcard-action-effect",
+	"v2-ordered-last-wildcard-fallback-ask",
+	"runtime-effective-policy-out-of-scope",
+}
+
+var openCodeLegacySources = []sourceRecord{
+	{Path: "packages/core/src/v1/config/config.ts", SHA256: "b99bcbd98df6da79e59cda482363f759cea9d4b9792c6c8e83b6a8d686138d30"},
+	{Path: "packages/core/src/v1/config/permission.ts", SHA256: "f7669733d939c4affd38c4a27ce14deff970c7ffa4e26071ce6a3cd39ce0d4dd"},
+	{Path: "packages/core/src/v1/config/migrate.ts", SHA256: "2a23a56469575d3edfe2044fe52468ee499d1c1c2281c34ebbcb624c7b25dae6"},
+	{Path: "packages/schema/src/permission.ts", SHA256: "229f2da7d245bf86deffed59b10cddf2dd04ffa05d10ef97fc5df289d0e6fb98"},
+	{Path: "packages/core/src/permission.ts", SHA256: "f5d5b295452f2ddf17c475a24e77e302bb2b4b65d8a9e02a0f7bc5ef5504a0ba"},
+}
+
+func readCheckedInSupportDocs(t *testing.T) (fixturesDocument, evidenceDocument) {
+	t.Helper()
+	var fixtures fixturesDocument
+	if err := decode(os.DirFS("."), "fixtures.json", &fixtures); err != nil {
+		t.Fatal(err)
+	}
+	var evidence evidenceDocument
+	if err := decode(os.DirFS("."), "evidence.json", &evidence); err != nil {
+		t.Fatal(err)
+	}
+	return fixtures, evidence
+}
+
+func checkedInOpenCodeFS(t *testing.T, mutate func(map[string]string)) fstest.MapFS {
+	t.Helper()
+	files := map[string]string{}
+	for _, path := range []string{"matrix.json", "fixtures.json", "evidence.json", openCodeLegacyFixturePath} {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		files[path] = string(data)
+	}
+	if mutate != nil {
+		mutate(files)
+	}
+	return supportFS(files)
+}
+
+func assertStrings(t *testing.T, got, want []string) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Fatalf("strings=%+v want %+v", got, want)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("strings[%d]=%q want %q", i, got[i], want[i])
+		}
+	}
 }
 
 func hasCode(findings []model.Finding, want string) bool {
