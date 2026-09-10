@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 7 of 17, WU3-A1 strict JSON/envelope integrity. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#29` governs the five WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, only final WU3-C closes `#29`, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 8 of 17, WU3-A2 support metadata integrity. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#29` governs the five WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, Issue #29 remains open until WU3-C, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -74,10 +74,10 @@ Issue gate: approved issue `#29` (`status:approved`, implementation WU3 scope) d
 - [x] WU3-A1 TRIANGULATE: Prove Unicode values remain valid, strict generic envelopes with ID-only fixture/evidence records load, and checked-in zero-support registries remain empty. <!-- sdd-owner: implementation -->
 - [x] WU3-A1 REFACTOR: Keep strict scanning local to `support`, preserve `Validate`, and run focused plus full verification for this slice. <!-- sdd-owner: implementation -->
 - [x] WU3-A1 acceptance and rollback: record evidence that checked-in registries are empty, CLI support behavior is unchanged, A2/A3 metadata semantics are deferred, and rollback is limited to `support/matrix.go`, `support/matrix_test.go`, and WU3-A1 OpenSpec notes. <!-- sdd-owner: implementation -->
-- [ ] WU3-A2: Validate metadata integrity such as empty/duplicate IDs, repository URLs, tags, source paths, hashes, digests, row tuples, and evidence-to-fixture links. <!-- sdd-owner: implementation -->
+- [x] WU3-A2: Validate metadata integrity such as empty/duplicate IDs, repository URLs, tags, source paths, hashes, digests, row tuples, evidence-to-fixture links, and RED/GREEN/TRIANGULATE/REFACTOR acceptance. <!-- sdd-owner: implementation -->
 - [ ] WU3-A3: Pin selected exact OpenCode version evidence and fixture metadata while the production matrix remains unsupported. <!-- sdd-owner: implementation -->
 - [ ] WU3-B: Implement adapter conformance and activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->
-- [ ] WU3-C: Integrate WU3 support behavior into the app and close issue `#29` only from this final WU3 slice. <!-- sdd-owner: implementation -->
+- [ ] WU3-C: Integrate WU3 support behavior into the app; Issue #29 remains open until WU3-C. <!-- sdd-owner: implementation -->
 
 The broad WU3 completion rows below remain unchecked until their exact slice owns and proves them; WU3-A1 does not claim exact version evidence, metadata integrity beyond the envelope, adapter behavior, or app support.
 
