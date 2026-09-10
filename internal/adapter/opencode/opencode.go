@@ -2,7 +2,9 @@
 package opencode
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -16,6 +18,9 @@ const (
 	maxFiles = 8
 	maxBytes = 256 << 10
 )
+
+var capabilities = []string{"bash", "edit", "read"}
+var effects = map[string]model.Effect{"allow": model.EffectAllow, "deny": model.EffectDeny, "ask": model.EffectAsk}
 
 // Report is the adapter-local semantic result before cross-client comparison.
 type Report struct {
@@ -51,184 +56,132 @@ func Resolve(sources []source.SelectedSource) Report {
 	return ResolveWithOptions(sources, Options{})
 }
 
-// ResolveWithOptions parses data-only OpenCode JSON and applies last-rule precedence by source order.
+// ResolveWithOptions parses the exact OpenCode 1.18.27 legacy scalar permission object.
 func ResolveWithOptions(sources []source.SelectedSource, options Options) Report {
 	if unsupported(options) {
-		return Report{Completeness: model.CompletenessIncomplete, Findings: []model.Finding{model.NewFinding("opencode-unsupported-version", "OpenCode version is not supported by evidence-backed metadata")}}
+		return failed("opencode-unsupported-version", "OpenCode version is not supported by evidence-backed metadata")
 	}
-	if ambiguousSourceOrder(sources) {
-		return Report{Completeness: model.CompletenessIncomplete, Findings: []model.Finding{model.NewFinding("opencode-ambiguous-source-order", "OpenCode source order is ambiguous")}}
+	if len(sources) != 1 || strings.TrimSpace(sources[0].Identity) == "" || strings.TrimSpace(sources[0].Path) == "" {
+		return failed("opencode-source-selection-incomplete", "OpenCode requires exactly one selected source with identity and path")
+	}
+	selected := sources[0]
+	if len(selected.Data) > maxBytes {
+		return failed("opencode-source-data-too-large", "OpenCode selected source exceeds the adapter byte limit")
+	}
+	rules, ok := parse(selected.Data, selected.Path)
+	if !ok {
+		return failed("opencode-permission-shape-unsupported", "OpenCode permission object shape is unsupported")
 	}
 	report := Report{Completeness: model.CompletenessComplete}
-	rules := map[string][]permissionRule{}
-	for _, selected := range sources {
-		parsed, findings := parse(selected)
-		report.Findings = append(report.Findings, findings...)
-		for capability, rule := range parsed {
-			rules[capability] = append(rules[capability], rule)
-		}
+	for _, capability := range capabilities {
+		report.Permissions = append(report.Permissions, modeledPermission(capability, rules[capability]))
 	}
-	if len(report.Findings) > 0 {
+	seen := map[string]bool{}
+	var requested []string
+	for _, value := range options.RequestedCapabilities {
+		capability := strings.TrimSpace(value)
+		if capability == "" {
+			if !seen[capability] {
+				report.Completeness = model.CompletenessIncomplete
+				report.Findings = append(report.Findings, model.NewFinding("opencode-invalid-requested-capability", "OpenCode requested capability is empty"))
+			}
+			seen[capability] = true
+			continue
+		}
+		if !seen[capability] {
+			requested = append(requested, capability)
+		}
+		seen[capability] = true
+	}
+	sort.Strings(requested)
+	for _, capability := range requested {
+		if _, ok := rules[capability]; ok {
+			continue
+		}
 		report.Completeness = model.CompletenessIncomplete
-	}
-	for capability, chain := range rules {
-		if len(chain) == 0 {
-			continue
-		}
-		final := chain[len(chain)-1]
-		if final.invalid != "" {
-			continue
-		}
-		permission := final.permission(capability, chain)
-		if permission.Trace().Status() == model.CompletenessIncomplete {
-			report.Completeness = model.CompletenessIncomplete
-			report.Findings = append(report.Findings, model.NewFinding("opencode-runtime-limit", "OpenCode permission depends on runtime context outside static analysis"))
-		}
-		report.Permissions = append(report.Permissions, permission)
-	}
-	for _, capability := range options.RequestedCapabilities {
-		if _, ok := rules[capability]; !ok {
-			report.Completeness = model.CompletenessIncomplete
-			report.Findings = append(report.Findings, model.NewFinding("opencode-unresolved-default", "OpenCode default permission is not modeled for the requested capability"))
-			report.Permissions = append(report.Permissions, unresolvedDefault(capability))
-		}
+		report.Findings = append(report.Findings, model.NewFinding("opencode-unresolved-default", "OpenCode default permission is not modeled for the requested capability"))
+		report.Permissions = append(report.Permissions, unresolvedDefault(capability))
 	}
 	sort.Slice(report.Permissions, func(i, j int) bool { return report.Permissions[i].Capability() < report.Permissions[j].Capability() })
 	return report
 }
 
 type permissionRule struct {
-	effect    model.Effect
-	matcher   string
-	condition string
-	location  string
-	raw       string
-	invalid   string
+	effect        model.Effect
+	location, raw string
 }
 
-func parse(selected source.SelectedSource) (map[string]permissionRule, []model.Finding) {
-	var top map[string]json.RawMessage
-	if err := json.Unmarshal(selected.Data, &top); err != nil {
-		return nil, []model.Finding{model.NewFinding("opencode-malformed", "OpenCode configuration is malformed")}
+func failed(code, message string) Report {
+	return Report{Completeness: model.CompletenessIncomplete, Findings: []model.Finding{model.NewFinding(code, message)}}
+}
+
+func parse(data []byte, path string) (map[string]permissionRule, bool) {
+	if !strictObjectKeys(data) {
+		return nil, false
 	}
-	if _, ok := top["permissions"]; ok {
-		return nil, []model.Finding{model.NewFinding("opencode-unknown-construct", "OpenCode permission-bearing construct is unsupported")}
+	var doc map[string]map[string]string
+	if err := json.Unmarshal(data, &doc); err != nil || len(doc) != 1 || doc["permission"] == nil || len(doc["permission"]) != 3 {
+		return nil, false
 	}
-	var doc struct {
-		Permission map[string]json.RawMessage `json:"permission"`
+	permissions := doc["permission"]
+	rules := map[string]permissionRule{}
+	for _, capability := range []string{"read", "edit", "bash"} {
+		effect, ok := effects[permissions[capability]]
+		if !ok {
+			return nil, false
+		}
+		rules[capability] = permissionRule{effect: effect, location: path + "#permission." + capability, raw: permissions[capability]}
 	}
-	if err := json.Unmarshal(selected.Data, &doc); err != nil {
-		return nil, []model.Finding{model.NewFinding("opencode-malformed", "OpenCode configuration is malformed")}
+	return rules, true
+}
+
+func strictObjectKeys(data []byte) bool {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	if token, err := decoder.Token(); err != nil || token != json.Delim('{') || !scanObject(decoder) {
+		return false
 	}
-	parsed := map[string]permissionRule{}
-	var findings []model.Finding
-	for capability, raw := range doc.Permission {
-		rule := parseRule(raw)
-		rule.matcher = defaultString(rule.matcher, capability)
-		rule.location = selected.Path + "#permission." + capability
-		rule.raw = string(raw)
-		if rule.invalid != "" {
-			findings = append(findings, model.NewFinding(rule.invalid, "OpenCode permission rule is unsupported"))
-		} else {
-			parsed[capability] = rule
+	token, err := decoder.Token()
+	return err == io.EOF && token == nil
+}
+
+func scanObject(decoder *json.Decoder) bool {
+	allowed, seen := map[string]bool{"permission": true, "read": true, "edit": true, "bash": true}, map[string]bool{}
+	for decoder.More() {
+		token, err := decoder.Token()
+		key, ok := token.(string)
+		if err != nil || !ok || seen[key] || !allowed[key] {
+			return false
+		}
+		seen[key] = true
+		token, err = decoder.Token()
+		if delimiter, ok := token.(json.Delim); err != nil || ok && (delimiter != '{' || !scanObject(decoder)) {
+			return false
 		}
 	}
-	return parsed, findings
+	token, err := decoder.Token()
+	return err == nil && token == json.Delim('}')
 }
 
-func parseRule(raw json.RawMessage) permissionRule {
-	var effect string
-	if err := json.Unmarshal(raw, &effect); err == nil {
-		return permissionRule{effect: toEffect(effect), invalid: invalidEffect(effect)}
-	}
-	var object struct {
-		Effect    string `json:"effect"`
-		Match     string `json:"match"`
-		Condition string `json:"condition"`
-	}
-	if err := json.Unmarshal(raw, &object); err != nil || object.Effect == "" {
-		return permissionRule{invalid: "opencode-unknown-permission"}
-	}
-	return permissionRule{effect: toEffect(object.Effect), matcher: object.Match, condition: object.Condition, invalid: invalidEffect(object.Effect)}
-}
-
-func (r permissionRule) permission(capability string, chain []permissionRule) model.Permission {
-	effect := r.effect
-	conditions := []model.Condition(nil)
-	unresolved := []string(nil)
-	if r.condition != "" {
-		effect = model.EffectConditional
-		conditions = []model.Condition{model.Condition(r.condition)}
-		unresolved = []string{r.condition}
-	}
-	steps := []model.TraceStep{{Kind: model.TraceRule, After: chain[0].effect, Rules: []string{chain[0].location}, Rationale: "OpenCode permission rule", Evidence: evidence(chain[0])}}
-	if len(chain) > 1 {
-		steps = append(steps, model.TraceStep{Kind: model.TracePrecedence, Before: chain[len(chain)-2].effect, After: effect, Rules: []string{r.location}, Rationale: "later OpenCode source overrides earlier rule", Evidence: evidence(r)})
-	}
-	extensions := []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}}
-	if len(unresolved) > 0 {
-		steps = append(steps, model.TraceStep{Kind: model.TraceRuntime, Before: r.effect, After: effect, Rules: []string{r.location}, Rationale: "runtime context is outside static configuration analysis", Evidence: evidence(r)})
-		extensions = append(extensions, model.Extension{Target: "opencode", Key: "limitation", Value: "static-not-runtime-enforcement"})
-	}
-	trace := model.NewResolutionTrace(steps, unresolved, completeness(unresolved))
-	return model.NewPermissionWithProvenance(capability, effect, model.Scope("opencode"), r.matcher, conditions, []model.Provenance{evidence(r)}, extensions, trace)
+func modeledPermission(capability string, rule permissionRule) model.Permission {
+	provenance := evidence(rule)
+	trace := model.NewResolutionTrace([]model.TraceStep{{Kind: model.TraceRule, After: rule.effect, Rules: []string{rule.location}, Rationale: "OpenCode permission rule", Evidence: provenance}}, nil, model.CompletenessComplete)
+	return model.NewPermissionWithProvenance(capability, rule.effect, model.Scope("opencode"), "*", nil, []model.Provenance{provenance}, []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}}, trace)
 }
 
 func unresolvedDefault(capability string) model.Permission {
 	provenance := model.NewProvenance("opencode", "requested:"+capability, "")
 	trace := model.NewResolutionTrace([]model.TraceStep{{Kind: model.TraceDefault, After: model.EffectUnresolved, Rules: []string{"requested:" + capability}, Rationale: "OpenCode default is unresolved without version-pinned default semantics", Evidence: provenance}}, []string{"default permission for " + capability}, model.CompletenessIncomplete)
-	return model.NewPermissionWithProvenance(capability, model.EffectUnresolved, model.Scope("opencode"), capability, nil, []model.Provenance{provenance}, []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}, {Target: "opencode", Key: "limitation", Value: "unresolved-default"}}, trace)
+	return model.NewPermissionWithProvenance(capability, model.EffectUnresolved, model.Scope("opencode"), "*", nil, []model.Provenance{provenance}, []model.Extension{{Target: "opencode", Key: "modeled", Value: "static-configuration"}, {Target: "opencode", Key: "limitation", Value: "unresolved-default"}}, trace)
 }
 
 func unsupported(options Options) bool {
-	if options.Version == "" {
+	if options.Version != "1.18.27" {
 		return true
 	}
 	result := support.Validate(options.Support, support.Entry{Target: "opencode", Version: options.Version, Construct: "permission"})
 	return result.Completeness != model.CompletenessComplete
 }
 
-func ambiguousSourceOrder(sources []source.SelectedSource) bool {
-	seen := map[string]bool{}
-	for _, selected := range sources {
-		if selected.Identity == "" || seen[selected.Identity] {
-			return true
-		}
-		seen[selected.Identity] = true
-	}
-	return false
-}
-
 func evidence(rule permissionRule) model.Provenance {
 	return model.NewProvenance("opencode", rule.location, rule.raw)
-}
-func completeness(unresolved []string) model.Completeness {
-	if len(unresolved) > 0 {
-		return model.CompletenessIncomplete
-	}
-	return model.CompletenessComplete
-}
-func toEffect(value string) model.Effect {
-	switch strings.ToLower(value) {
-	case "allow":
-		return model.EffectAllow
-	case "deny":
-		return model.EffectDeny
-	case "ask":
-		return model.EffectAsk
-	default:
-		return model.EffectUnresolved
-	}
-}
-func invalidEffect(value string) string {
-	if toEffect(value) == model.EffectUnresolved {
-		return "opencode-unknown-effect"
-	}
-	return ""
-}
-func defaultString(value, fallback string) string {
-	if value == "" {
-		return fallback
-	}
-	return value
 }
