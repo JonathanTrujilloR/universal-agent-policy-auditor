@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -352,7 +353,10 @@ func TestCheckedInOpenCodeRegistryRejectsFixtureDataDrift(t *testing.T) {
 	}
 }
 
-func TestCheckedInOpenCodeAuditCLIStillExitsUnsupported(t *testing.T) {
+func TestCheckedInOpenCodeAuditCLIExitsCompleteForExactFixture(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping go-build CLI harness in short mode")
+	}
 	repoRoot, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatal(err)
@@ -364,14 +368,28 @@ func TestCheckedInOpenCodeAuditCLIStillExitsUnsupported(t *testing.T) {
 		t.Fatalf("go build err=%v output=%q", err, output)
 	}
 	cmd := exec.Command(binary, "audit", "opencode", "--root", repoRoot, "--config", filepath.Join(repoRoot, "support", openCodeLegacyFixturePath), "--opencode-version", "1.18.27")
+	cmd.Dir = t.TempDir()
 	var stdout, stderr strings.Builder
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
-	err = cmd.Run()
-	if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() != 2 {
-		t.Fatalf("auditor exit err=%v stdout=%q stderr=%q", err, stdout.String(), stderr.String())
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("auditor err=%v stdout=%q stderr=%q", err, stdout.String(), stderr.String())
 	}
-	if stdout.String() != "unsupported_or_incomplete\n" || stderr.String() != "" {
+	if stdout.String() != "complete_no_findings\n" || stderr.String() != "" {
 		t.Fatalf("stdout=%q stderr=%q", stdout.String(), stderr.String())
+	}
+}
+
+func TestLoadCheckedInMatchesRepositoryMetadata(t *testing.T) {
+	fromFiles, err := Load(os.DirFS("."))
+	if err != nil {
+		t.Fatalf("Load returned err=%v", err)
+	}
+	fromEmbed, err := LoadCheckedIn()
+	if err != nil {
+		t.Fatalf("LoadCheckedIn returned err=%v", err)
+	}
+	if !reflect.DeepEqual(fromEmbed, fromFiles) {
+		t.Fatalf("embedded matrix=%+v file matrix=%+v", fromEmbed, fromFiles)
 	}
 }
 

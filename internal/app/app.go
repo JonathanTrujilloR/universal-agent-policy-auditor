@@ -2,8 +2,16 @@
 package app
 
 import (
+	"context"
+	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/adapter/opencode"
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
+	"github.com/jkelevra/universal-agent-policy-auditor/support"
 )
 
 type Mode string
@@ -36,24 +44,41 @@ type Request struct {
 }
 
 type Result struct {
-	Category Category
-	Message  string
-	Build    BuildInfo
+	Category     Category
+	Message      string
+	Build        BuildInfo
+	Completeness model.Completeness
+	Permissions  []model.Permission
+	Findings     []model.Finding
+	Limitations  []string
 }
 
-func Run(req Request) Result {
+type options struct {
+	files       source.ReadFS
+	loadSupport func() (support.Matrix, error)
+	lookupEnv   func(string) (string, bool)
+}
+
+func Run(req Request) Result { return runWithOptions(req, options{}) }
+
+func runWithOptions(req Request, options options) Result {
+	deps := normalizeOptions(options)
 	switch req.Mode {
 	case ModeVersion:
-		return Result{Category: CompleteNoFindings, Message: "version", Build: normalize(req.Build)}
+		return Result{Category: CompleteNoFindings, Message: "version", Build: normalize(req.Build), Completeness: model.CompletenessComplete}
 	case ModeAudit:
-		return audit(req)
+		return audit(req, deps)
 	default:
 		return Result{Category: InvalidRequest, Message: "invalid request", Build: normalize(req.Build)}
 	}
 }
 
-func audit(req Request) Result {
+func audit(req Request, options options) Result {
 	build := normalize(req.Build)
+	files := reflect.ValueOf(options.files)
+	if files.Kind() == reflect.Pointer && files.IsNil() {
+		return Result{Category: OperationalFailure, Message: "source dependency unavailable", Build: build}
+	}
 	if req.Target != TargetOpenCode && req.Target != TargetClaudeCode || req.Root == "" || req.ExplicitConfig == "" {
 		return Result{Category: InvalidRequest, Message: "invalid audit request", Build: build}
 	}
@@ -66,7 +91,49 @@ func audit(req Request) Result {
 	if req.TargetVersion == "" {
 		return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode version evidence is missing", Build: build}
 	}
-	return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode support evidence is incomplete", Build: build}
+	matrix, err := options.loadSupport()
+	if err != nil {
+		return Result{Category: OperationalFailure, Message: "support metadata unavailable", Build: build}
+	}
+	if result := support.Validate(matrix, support.Entry{Target: "opencode", Version: req.TargetVersion, Construct: "permission"}); result.Completeness != model.CompletenessComplete {
+		return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode support evidence is incomplete", Build: build, Completeness: result.Completeness, Findings: result.Findings}
+	}
+
+	plan := opencode.DiscoveryPlan(req.Root, []string{req.ExplicitConfig})
+	selection := source.Execute(context.Background(), plan, options.files, source.CaptureEnv(plan.EnvKeys, options.lookupEnv))
+	if len(selection.Findings) != 0 || len(selection.Selected) != 1 {
+		return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode source selection is incomplete", Build: build, Completeness: model.CompletenessIncomplete, Findings: sourceFindings(selection.Findings)}
+	}
+	report := opencode.ResolveWithOptions(selection.Selected, opencode.Options{Version: req.TargetVersion, Support: matrix})
+	result := Result{Build: build, Completeness: report.Completeness, Permissions: report.Permissions, Findings: report.Findings, Limitations: []string{"modeled-static-configuration"}}
+	if report.Completeness == model.CompletenessComplete && len(report.Findings) == 0 {
+		result.Category = CompleteNoFindings
+		return result
+	}
+	result.Category = UnsupportedOrIncomplete
+	result.Message = "OpenCode audit is unsupported or incomplete"
+	return result
+}
+
+func sourceFindings(findings []source.Finding) []model.Finding {
+	out := make([]model.Finding, 0, len(findings))
+	for _, finding := range findings {
+		out = append(out, model.NewFinding("source-"+finding.Code, finding.Message))
+	}
+	return out
+}
+
+func normalizeOptions(options options) options {
+	if options.files == nil {
+		options.files = source.OSReadFS{}
+	}
+	if options.loadSupport == nil {
+		options.loadSupport = support.LoadCheckedIn
+	}
+	if options.lookupEnv == nil {
+		options.lookupEnv = os.LookupEnv
+	}
+	return options
 }
 
 func ExitCode(category Category) int {

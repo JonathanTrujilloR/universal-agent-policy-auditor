@@ -179,3 +179,14 @@ Boundary: the singleton row proves only the static legacy scalar subset. Explici
 Changed files: `support/matrix.json`, `support/matrix_test.go`, `internal/adapter/opencode/opencode_test.go`, `support/evidence.md`, and the two OpenSpec progress artifacts. WU3-B2 alone is checked; WU3-C and broad WU3 acceptance remain pending.
 
 Rollback: remove the singleton row, B2 production-binding tests and evidence wording, the B2 task update, and this block; preserve A3 evidence and B1 parser behavior.
+
+## Work Unit 3-C: App support wiring
+Status: implementation complete for final WU3 PR 12 of 18; parent delivery owns `Closes #29`; no stage, commit, push, PR, review, tag, or publication action performed.
+Structured status: alpha worktree authority, `openspec`, repo-local, allowed WU3-C files only; ambient original-worktree ambiguity ignored per parent; workload resolved as stacked-to-main, final slice, 388 authored lines including new file, no compression/exception.
+TDD evidence: SAFETY `go test ./support ./internal/app ./cmd/auditor -count=1` passed; RED focused support/app tests failed on missing `LoadCheckedIn`, app completion fields, and app exact support path; GREEN added embedded support FS and app orchestration; TRIANGULATE covered unsupported/missing version, Claude, malformed/duplicate/extra/missing/resource-object config, nonexistent root/config, directory, escaping symlink, oversize/read errors, explicit config over env, metadata loader error, and no read before unsupported admission; REFACTOR kept CLI grammar and category-only output.
+Changed files: `support/embedded.go`, `support/matrix.json` gate text, `support/matrix_test.go`, `internal/app/app.go`, `internal/app/app_test.go`, `README.md`, `support/evidence.md`, tasks/progress artifacts.
+Focused verification passed: `go test ./support ./internal/app ./cmd/auditor -count=1`; `go test ./support -run 'TestLoadCheckedInMatchesRepositoryMetadata|TestCheckedInOpenCodeAuditCLIExitsCompleteForExactFixture' -count=1`; `go test ./internal/app -count=25`; `go test -race ./internal/app ./support -count=1`; `go test ./internal/app ./cmd/auditor ./support ./internal/adapter/opencode -count=1`.
+Final verification passed: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
+Acceptance: source-built CLI exact fixture/version from unrelated cwd exits 0 with stdout `complete_no_findings\n` and empty stderr; wrong/unsupported and incomplete inputs fail closed; category-only CLI emits no raw config/path/error details.
+WU3 aggregate rows are now checked from A1/A2/A3/B1/B2/C evidence; remaining unchecked implementation rows are WU4-WU9 renderer/comparison/release/pilot slices, and parent lifecycle gates remain deferred.
+Rollback: revert WU3-C app/support embedding/docs/tests and this OpenSpec update; preserve merged WU3-A/B evidence unless reverting all WU3 broad acceptance rows together.

@@ -1,6 +1,6 @@
 # OpenCode 1.18.27 Pinned Static Evidence
 
-This file records a static evidence boundary for one internal adapter row only. It does not add CLI-supported targets: `support/matrix.json` now admits exactly one OpenCode `1.18.27` legacy scalar `permission` row for adapter conformance, while `internal/app` and `cmd/auditor` still return `unsupported_or_incomplete` until WU3-C wires production support behavior.
+This file records the static evidence boundary for the only WU3-supported path: a source-built CLI statically evaluates one explicit OpenCode `1.18.27` legacy scalar `permission` config with `read`, `edit`, and `bash`. Output is still category/exit only; text and JSON renderers are later slices.
 
 ## Authority and fixture
 
@@ -56,4 +56,4 @@ Fixture bytes contain only this legacy scalar shape:
 
 ## Explicit exclusions
 
-This evidence does not prove CLI/app support; current release execution still has zero CLI-supported targets and returns `unsupported_or_incomplete` for the exact-version sentinel until WU3-C. It does not prove V2 array config authoring, resource maps, non-scalar resource matchers, tool names beyond the three explicit scalar actions, agents or modes, inferred defaults for omitted actions, condition-bearing permissions, saved approvals, multiple config sources, source precedence, effective runtime behavior, enforcement, security guarantees, or compliance guarantees. The fixture was not executed upstream. `*` must not be generalized beyond the scalar migration boundary, and any condition-bearing or resource-map shape remains rejected as unsupported/incomplete.
+This evidence does not prove release availability, runtime policy, text/JSON rendering, V2 array config authoring, resource maps, non-scalar resource matchers, tool names beyond the three explicit scalar actions, agents or modes, inferred defaults for omitted actions, condition-bearing permissions, saved approvals, multiple config sources, source precedence, effective runtime behavior, enforcement, security guarantees, or compliance guarantees. The fixture was not executed upstream. Claude Code and every excluded OpenCode semantic remain unsupported/incomplete. `*` must not be generalized beyond the scalar migration boundary, and any condition-bearing or resource-map shape remains rejected as unsupported/incomplete.
