@@ -206,13 +206,20 @@ func TestLoadRejectsMetadataIntegrityFailures(t *testing.T) {
 	}
 }
 
-func TestLoadConsumesConfiguredPinnedOpenCodeRegistryWithoutSupportRows(t *testing.T) {
+func TestLoadActivatesOnlyCheckedInOpenCodeScalarPermissionRow(t *testing.T) {
 	matrix, err := Load(os.DirFS("."))
 	if err != nil {
 		t.Fatalf("Load returned err=%v", err)
 	}
-	if len(matrix.Entries) != 0 {
-		t.Fatalf("matrix entries=%+v, want zero production support rows", matrix.Entries)
+	if len(matrix.Entries) != 1 {
+		t.Fatalf("matrix entries=%+v, want one production support row", matrix.Entries)
+	}
+	entry := matrix.Entries[0]
+	if entry.Target != "opencode" || entry.Version != "1.18.27" || entry.Construct != "permission" || entry.Fixture != openCodeLegacyFixtureID || entry.Evidence != openCodeLegacyEvidenceID {
+		t.Fatalf("entry tuple/refs=%+v", entry)
+	}
+	if !entry.PermissionBearing || !entry.DefaultsKnown || !entry.MatcherKnown || !entry.ConditionsKnown {
+		t.Fatalf("entry flags=%+v, want all semantic gates true for admitted scalar shape", entry)
 	}
 	if !matrix.Registry.Fixtures[openCodeLegacyFixtureID] || len(matrix.Registry.Fixtures) != 1 {
 		t.Fatalf("fixture registry=%+v", matrix.Registry.Fixtures)
@@ -220,9 +227,68 @@ func TestLoadConsumesConfiguredPinnedOpenCodeRegistryWithoutSupportRows(t *testi
 	if !matrix.Registry.Evidence[openCodeLegacyEvidenceID] || len(matrix.Registry.Evidence) != 1 {
 		t.Fatalf("evidence registry=%+v", matrix.Registry.Evidence)
 	}
-	result := Validate(matrix, Entry{Target: "opencode", Version: "1.18.27", Construct: "permission", PermissionBearing: true})
-	if result.Completeness != model.CompletenessIncomplete || !hasCode(result.Findings, "unsupported-version") {
+	result := Validate(matrix, Entry{Target: "opencode", Version: "1.18.27", Construct: "permission"})
+	if result.Completeness != model.CompletenessComplete || len(result.Findings) != 0 {
 		t.Fatalf("Validate result=%+v", result)
+	}
+	for _, tt := range []struct {
+		name  string
+		entry Entry
+		code  string
+	}{
+		{"nearby version unsupported", Entry{Target: "opencode", Version: "1.18.28", Construct: "permission"}, "unsupported-version"},
+		{"claude unsupported", Entry{Target: "claudecode", Version: "1.18.27", Construct: "permission"}, "unsupported-version"},
+		{"construct unsupported", Entry{Target: "opencode", Version: "1.18.27", Construct: "resource_map"}, "unknown-construct"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			result := Validate(matrix, tt.entry)
+			if result.Completeness != model.CompletenessIncomplete || !hasCode(result.Findings, tt.code) {
+				t.Fatalf("Validate result=%+v", result)
+			}
+		})
+	}
+}
+
+func TestValidateRejectsFalseSemanticFlagsOnReferencedRows(t *testing.T) {
+	complete := Entry{Target: "opencode", Version: "1.18.27", Construct: "permission", Fixture: openCodeLegacyFixtureID, Evidence: openCodeLegacyEvidenceID, PermissionBearing: true, DefaultsKnown: true, MatcherKnown: true, ConditionsKnown: true}
+	for _, tt := range []struct {
+		name   string
+		mutate func(*Entry)
+	}{
+		{"permission-bearing false", func(entry *Entry) { entry.PermissionBearing = false }},
+		{"defaults-known false", func(entry *Entry) { entry.DefaultsKnown = false }},
+		{"matcher-known false", func(entry *Entry) { entry.MatcherKnown = false }},
+		{"conditions-known false", func(entry *Entry) { entry.ConditionsKnown = false }},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			entry := complete
+			tt.mutate(&entry)
+			matrix := Matrix{Entries: []Entry{entry}, Registry: Registry{Fixtures: map[string]bool{openCodeLegacyFixtureID: true}, Evidence: map[string]bool{openCodeLegacyEvidenceID: true}}}
+			result := Validate(matrix, complete)
+			if result.Completeness != model.CompletenessIncomplete || !hasCode(result.Findings, "incomplete-evidence") {
+				t.Fatalf("Validate result=%+v", result)
+			}
+		})
+	}
+}
+
+func TestCheckedInOpenCodeMatrixRejectsMissingReferences(t *testing.T) {
+	for _, tt := range []struct {
+		name   string
+		mutate func(map[string]string)
+	}{
+		{"missing fixture", func(files map[string]string) {
+			files["matrix.json"] = strings.Replace(files["matrix.json"], `"fixture": "`+openCodeLegacyFixtureID+`"`, `"fixture": "missing"`, 1)
+		}},
+		{"missing evidence", func(files map[string]string) {
+			files["matrix.json"] = strings.Replace(files["matrix.json"], `"evidence": "`+openCodeLegacyEvidenceID+`"`, `"evidence": "missing"`, 1)
+		}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := Load(checkedInOpenCodeFS(t, tt.mutate)); err == nil {
+				t.Fatal("Load accepted a production matrix row with missing references")
+			}
+		})
 	}
 }
 
@@ -298,12 +364,14 @@ func TestCheckedInOpenCodeAuditCLIStillExitsUnsupported(t *testing.T) {
 		t.Fatalf("go build err=%v output=%q", err, output)
 	}
 	cmd := exec.Command(binary, "audit", "opencode", "--root", repoRoot, "--config", filepath.Join(repoRoot, "support", openCodeLegacyFixturePath), "--opencode-version", "1.18.27")
-	output, err := cmd.CombinedOutput()
+	var stdout, stderr strings.Builder
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	err = cmd.Run()
 	if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() != 2 {
-		t.Fatalf("auditor exit err=%v output=%q", err, output)
+		t.Fatalf("auditor exit err=%v stdout=%q stderr=%q", err, stdout.String(), stderr.String())
 	}
-	if !strings.Contains(string(output), "unsupported_or_incomplete") {
-		t.Fatalf("output=%q", output)
+	if stdout.String() != "unsupported_or_incomplete\n" || stderr.String() != "" {
+		t.Fatalf("stdout=%q stderr=%q", stdout.String(), stderr.String())
 	}
 }
 

@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 10 of 18, WU3-B1 exact OpenCode adapter parser/conformance cleanup. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#29` governs the six WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, Issue #29 remains open until WU3-C, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 11 of 18, WU3-B2 production row activation. Planning PRs A-D are merged, approved issue `#21` is closed, WU3-B1 merged in PR `#33` as `c09cf130d13cdf3e15529d6e214a3e401f81ddfe`, and approved issue `#29` governs the six WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, Issue #29 remains open until WU3-C, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -76,8 +76,8 @@ Issue gate: approved issue `#29` (`status:approved`, implementation WU3 scope) d
 - [x] WU3-A1 acceptance and rollback: record evidence that checked-in registries are empty, CLI support behavior is unchanged, A2/A3 metadata semantics are deferred, and rollback is limited to `support/matrix.go`, `support/matrix_test.go`, and WU3-A1 OpenSpec notes. <!-- sdd-owner: implementation -->
 - [x] WU3-A2: Validate metadata integrity such as empty/duplicate IDs, repository URLs, tags, source paths, hashes, digests, row tuples, evidence-to-fixture links, and RED/GREEN/TRIANGULATE/REFACTOR acceptance. <!-- sdd-owner: implementation -->
 - [x] WU3-A3: Pin selected exact OpenCode version evidence and fixture metadata while the production matrix remains unsupported. <!-- sdd-owner: implementation -->
-- [x] WU3-B1: Clean OpenCode adapter parsing/conformance to exact 1.18.27 scalar `permission` semantics using a test-local support row; production matrix remains empty and app claims unchanged. <!-- sdd-owner: implementation -->
-- [ ] WU3-B2: Activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->
+- [x] WU3-B1: Clean OpenCode adapter parsing/conformance to exact 1.18.27 scalar `permission` semantics using a test-local support row; production matrix remained empty and app claims unchanged in merged PR `#33` at `c09cf130d13cdf3e15529d6e214a3e401f81ddfe`. <!-- sdd-owner: implementation -->
+- [x] WU3-B2: Activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->
 - [ ] WU3-C: Integrate WU3 support behavior into the app; Issue #29 remains open until WU3-C. <!-- sdd-owner: implementation -->
 
 The broad WU3 completion rows below remain unchecked until their exact slice owns and proves them; WU3-A1 does not claim exact version evidence, metadata integrity beyond the envelope, adapter behavior, or app support.

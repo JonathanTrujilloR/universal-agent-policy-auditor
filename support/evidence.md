@@ -1,6 +1,6 @@
 # OpenCode 1.18.27 Pinned Static Evidence
 
-This file records a static evidence boundary only. It does not add production support: `support/matrix.json` keeps an empty `entries` array, `support.Load` validates fixture/evidence registries, and `support.Validate` for OpenCode `1.18.27` remains `unsupported-version` until a later slice adds and proves a matrix row.
+This file records a static evidence boundary for one internal adapter row only. It does not add CLI-supported targets: `support/matrix.json` now admits exactly one OpenCode `1.18.27` legacy scalar `permission` row for adapter conformance, while `internal/app` and `cmd/auditor` still return `unsupported_or_incomplete` until WU3-C wires production support behavior.
 
 ## Authority and fixture
 
@@ -50,8 +50,10 @@ Fixture bytes contain only this legacy scalar shape:
 
 - The checked fixture is schema/migration-compatible by static inspection for singular legacy `permission` scalar actions `read:allow`, `edit:deny`, and `bash:ask` at OpenCode `1.18.27`.
 - The evidence is pinned to one repository, tag, direct tag commit, fixture ID, evidence ID, source list, and exact source SHA-256 values.
+- The production matrix row is intentionally singleton-scoped to `target=opencode`, `version=1.18.27`, `construct=permission`, fixture `opencode-1.18.27-legacy-permission-scalar`, and evidence `opencode-1.18.27-legacy-permission-scalar-source`.
+- Matrix flags are true only for this admitted shape: explicit `read`, `edit`, and `bash` scalar actions mean the adapter infers no omitted defaults; matcher `*` is supported only because scalar legacy migration emits wildcard resource rules; conditions are known absent for this scalar shape.
 - The V2 source hash used here is the corrected `229f2da7d245bf86deffed59b10cddf2dd04ffa05d10ef97fc5df289d0e6fb98` value.
 
 ## Explicit exclusions
 
-This evidence does not prove V2 array config authoring, resource maps, tool names, agents or modes, defaults beyond the observed evaluator fallback, saved approvals, multiple config sources, source precedence, effective runtime behavior, enforcement, security guarantees, or compliance guarantees. The fixture was not executed upstream and is not evidence of OpenCode support until adapter conformance and a production matrix row are added later.
+This evidence does not prove CLI/app support; current release execution still has zero CLI-supported targets and returns `unsupported_or_incomplete` for the exact-version sentinel until WU3-C. It does not prove V2 array config authoring, resource maps, non-scalar resource matchers, tool names beyond the three explicit scalar actions, agents or modes, inferred defaults for omitted actions, condition-bearing permissions, saved approvals, multiple config sources, source precedence, effective runtime behavior, enforcement, security guarantees, or compliance guarantees. The fixture was not executed upstream. `*` must not be generalized beyond the scalar migration boundary, and any condition-bearing or resource-map shape remains rejected as unsupported/incomplete.
