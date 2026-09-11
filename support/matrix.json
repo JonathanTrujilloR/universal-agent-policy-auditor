@@ -13,5 +13,5 @@
       "conditions_known": true
     }
   ],
-  "gate": "Only OpenCode 1.18.27 legacy scalar permission entries with explicit read, edit, and bash actions are internally adapter-supported. App/CLI support remains unsupported until WU3-C wires production support behavior."
+  "gate": "Only source-built CLI audits of one explicit OpenCode 1.18.27 legacy scalar permission config with read, edit, and bash actions are supported. Output is category/exit only; runtime policy, Claude Code, renderers, and excluded OpenCode semantics remain unsupported."
 }
