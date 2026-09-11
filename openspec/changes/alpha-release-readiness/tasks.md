@@ -7,7 +7,7 @@
 | Estimated changed lines | 2,340-3,340+ authored lines total: 940 current planning lines plus 1,400-2,400 implementation lines and this correction |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B OpenCode adapter → PR 11 WU3-C app support wiring → PR 12 JSON/redaction → PR 13 human renderer → PR 14 #19 integration → PR 15 CI/release build → PR 16 release docs/prerelease → PR 17 post-release pilot pack |
+| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B1 parser/conformance cleanup → PR 11 WU3-B2 production row activation → PR 12 WU3-C app support wiring → PR 13 JSON/redaction → PR 14 human renderer → PR 15 #19 integration → PR 16 CI/release build → PR 17 release docs/prerelease → PR 18 post-release pilot pack |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 9 of 17, WU3-A3 pinned OpenCode evidence and fixture metadata. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#29` governs the five WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, Issue #29 remains open until WU3-C, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 10 of 18, WU3-B1 exact OpenCode adapter parser/conformance cleanup. Planning PRs A-D are merged, approved issue `#21` is closed, and approved issue `#29` governs the six WU3 slices. Chain implication: use `stacked-to-main`; this intermediate slice uses `Refs #29`, Issue #29 remains open until WU3-C, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -39,7 +39,7 @@ Planning issue/reference policy: use one coherent approved planning issue only i
 - [x] Planning PR C delivered the conservative architecture in PR `#24` (225 authored changed lines), merged as `2eccd0d59ef8e5dbd937dbba828061d306328e6f` after independent architecture/test verification. <!-- sdd-owner: implementation -->
 - [x] Planning PR D delivered this corrected task plan in PR `#25` (152 authored changed lines), merged as `cd4bd0904898530645b9cd3a6edab25c1b6e6ef1`, and closed planning issue `#21`. <!-- sdd-owner: implementation -->
 - [x] Planning delivery evidence records issue `#21`, intermediate `Refs #21`, the final closing reference, stacked-to-main order, per-PR counts, structural readback, and rollback boundaries across PRs `#22`-`#25`. <!-- sdd-owner: implementation -->
-- [x] Implementation Work Units remained pending until all planning PRs were delivered and the maintainer approved the revised 17-PR chain, including five WU3 slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence, B adapter, and C app. <!-- sdd-owner: implementation -->
+- [x] Implementation Work Units remained pending until all planning PRs were delivered and the maintainer approved the revised 18-PR chain, including six WU3 slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence, B1 parser, B2 row activation, and C app. <!-- sdd-owner: implementation -->
 
 ## Work Unit 1: Public Project Identity, Legal, and Docs Baseline
 
@@ -65,7 +65,7 @@ Issue gate: approved issue `#27` (`status:approved`, `type:feature`). Forecast: 
 
 ## Work Unit 3: OpenCode Evidence Gate
 
-Issue gate: approved issue `#29` (`status:approved`, implementation WU3 scope) defines five bounded slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence, B adapter, and C app. Forecast is enforced per slice under 400 authored changed lines. A1 file surfaces are limited to `support/matrix.go`, `support/matrix_test.go`, and OpenSpec progress artifacts; exact OpenCode version evidence remains deferred until A3.
+Issue gate: approved issue `#29` (`status:approved`, implementation WU3 scope) defines six bounded slices: A1 JSON/envelope, A2 metadata integrity, A3 pinned evidence, B1 parser, B2 row activation, and C app. Forecast is enforced per slice under 400 authored changed lines.
 
 ### WU3 reduced slice tracking for issue `#29`
 
@@ -76,7 +76,8 @@ Issue gate: approved issue `#29` (`status:approved`, implementation WU3 scope) d
 - [x] WU3-A1 acceptance and rollback: record evidence that checked-in registries are empty, CLI support behavior is unchanged, A2/A3 metadata semantics are deferred, and rollback is limited to `support/matrix.go`, `support/matrix_test.go`, and WU3-A1 OpenSpec notes. <!-- sdd-owner: implementation -->
 - [x] WU3-A2: Validate metadata integrity such as empty/duplicate IDs, repository URLs, tags, source paths, hashes, digests, row tuples, evidence-to-fixture links, and RED/GREEN/TRIANGULATE/REFACTOR acceptance. <!-- sdd-owner: implementation -->
 - [x] WU3-A3: Pin selected exact OpenCode version evidence and fixture metadata while the production matrix remains unsupported. <!-- sdd-owner: implementation -->
-- [ ] WU3-B: Implement adapter conformance and activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->
+- [x] WU3-B1: Clean OpenCode adapter parsing/conformance to exact 1.18.27 scalar `permission` semantics using a test-local support row; production matrix remains empty and app claims unchanged. <!-- sdd-owner: implementation -->
+- [ ] WU3-B2: Activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->
 - [ ] WU3-C: Integrate WU3 support behavior into the app; Issue #29 remains open until WU3-C. <!-- sdd-owner: implementation -->
 
 The broad WU3 completion rows below remain unchecked until their exact slice owns and proves them; WU3-A1 does not claim exact version evidence, metadata integrity beyond the envelope, adapter behavior, or app support.

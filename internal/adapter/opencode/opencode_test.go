@@ -2,6 +2,7 @@ package opencode
 
 import (
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
@@ -25,89 +26,96 @@ func TestDiscoveryPlanIsDeclarativeAndBounded(t *testing.T) {
 	}
 }
 
-func TestResolveFailsClosedWithoutSupportMatrixEntry(t *testing.T) {
-	report := Resolve([]source.SelectedSource{{Identity: "project", Path: "/repo/opencode.json", Data: []byte(`{"permission":{"bash":"allow"}}`)}})
-	if report.Completeness != model.CompletenessIncomplete || !hasFinding(report.Findings, "opencode-unsupported-version") || len(report.Permissions) != 0 {
-		t.Fatalf("report=%+v", report)
+func TestResolveRequiresExactVersionBeforeSupportValidation(t *testing.T) {
+	entry := support.Entry{Target: "opencode", Version: "synthetic", Construct: "permission", Fixture: "fixture", Evidence: "evidence", PermissionBearing: true, DefaultsKnown: true, MatcherKnown: true, ConditionsKnown: true}
+	report := ResolveWithOptions(validSource(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`), Options{Version: "synthetic", Support: support.Matrix{Entries: []support.Entry{entry}, Registry: support.Registry{Fixtures: map[string]bool{"fixture": true}, Evidence: map[string]bool{"evidence": true}}}})
+	assertIncomplete(t, report, "opencode-unsupported-version")
+}
+
+func TestResolveRequiresExactlyOneSelectedSourceWithIdentityPathAndBoundedData(t *testing.T) {
+	valid := validSource(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`)
+	tests := []struct {
+		sources []source.SelectedSource
+		code    string
+	}{
+		{append(valid, source.SelectedSource{Identity: "other", Path: "/repo/other.json", Data: []byte(`{}`)}), "opencode-source-selection-incomplete"},
+		{[]source.SelectedSource{{Identity: " ", Path: "/repo/opencode.json", Data: []byte(`{}`)}}, "opencode-source-selection-incomplete"},
+		{[]source.SelectedSource{{Identity: "project", Path: "\t", Data: []byte(`{}`)}}, "opencode-source-selection-incomplete"},
+		{[]source.SelectedSource{{Identity: "project", Path: "/repo/opencode.json", Data: make([]byte, maxBytes+1)}}, "opencode-source-data-too-large"},
+	}
+	for _, tt := range tests {
+		assertIncomplete(t, ResolveWithOptions(tt.sources, supportedOptions()), tt.code)
 	}
 }
 
-func TestResolveWithEvidenceBackedFixtureModelsPrecedenceAndRuntimeLimit(t *testing.T) {
+func TestResolveConformsExactOpenCode11827ScalarFixture(t *testing.T) {
+	fixture, err := os.ReadFile("../../../support/testdata/opencode-1.18.27-permission-legacy-scalar.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := ResolveWithOptions(validSource(string(fixture)), supportedOptions())
+	if report.Completeness != model.CompletenessComplete || len(report.Findings) != 0 {
+		t.Fatalf("report=%+v", report)
+	}
+	if got, want := permissionSummary(report.Permissions), []string{"bash:ask:*", "edit:deny:*", "read:allow:*"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("permissions=%v", got)
+	}
+	first := report.Permissions[0]
+	steps := first.Trace().Steps()
+	if first.Scope() != model.Scope("opencode") || len(first.Conditions()) != 0 || len(steps) != 1 || steps[0].Kind != model.TraceRule || steps[0].After != first.Effect() || len(first.Provenance()) != 1 || first.Provenance()[0].Location() != "/repo/opencode.json #permission.bash" {
+		t.Fatalf("permission=%+v trace=%+v", first, steps)
+	}
+}
+
+func TestResolveRejectsOldInventedObjectMatcherConditionFixture(t *testing.T) {
 	fixture, err := os.ReadFile("../../../testdata/conformance/opencode/permissions-precedence-runtime.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := ResolveWithOptions([]source.SelectedSource{
-		{Identity: "01-global", Path: "/repo/opencode.global.json", Data: []byte(`{"permission":{"bash":"ask","edit":"deny"}}`)},
-		{Identity: "02-project", Path: "/repo/opencode.json", Data: fixture},
-	}, supportedOptions())
-	if report.Completeness != model.CompletenessIncomplete || !hasFinding(report.Findings, "opencode-runtime-limit") {
-		t.Fatalf("report=%+v", report)
-	}
-	bash := permissionByCapability(report.Permissions, "bash")
-	if bash.Effect() != model.EffectAllow || bash.Scope() != model.Scope("opencode") || bash.Matcher() != "bash" {
-		t.Fatalf("bash=%+v", bash)
-	}
-	steps := bash.Trace().Steps()
-	if len(steps) != 2 || steps[0].Kind != model.TraceRule || steps[1].Kind != model.TracePrecedence || steps[1].After != model.EffectAllow {
-		t.Fatalf("trace=%+v", steps)
-	}
-	webfetch := permissionByCapability(report.Permissions, "webfetch")
-	webSteps := webfetch.Trace().Steps()
-	if webfetch.Effect() != model.EffectConditional || webfetch.Conditions()[0] != model.Condition("interactive approval") || webSteps[len(webSteps)-1].Kind != model.TraceRuntime {
-		t.Fatalf("webfetch=%+v trace=%+v", webfetch, webSteps)
+	assertIncomplete(t, ResolveWithOptions(validSource(string(fixture)), supportedOptions()), "opencode-permission-shape-unsupported")
+}
+
+func TestResolveStrictlyRejectsUnsupportedJSONShapesAtomically(t *testing.T) {
+	for _, data := range []string{
+		`{"permission":{"r\u0065ad":"allow","read":"allow","edit":"deny","bash":"ask"}}`,
+		`{"permission":{"read":"allow","edit":"deny","bash":"ask"}} {}`,
+		`{"permission":null}`,
+		`{"permission":{"read":"allow","edit":"deny","bash":["ask"]}}`,
+		`{"permission":{"read":"allow","edit":"deny","bash":"ASK"}}`,
+		`{"permission":{"read":"allow","edit":"deny","båsh":"ask"}}`,
+		`{"permission":{"read":"allow","edit":"deny","bash":"ask"},"tools":{}}`,
+		`{"permission":{"read":"allow","edit":"deny"}}`,
+	} {
+		report := ResolveWithOptions(validSource(data), supportedOptions())
+		assertIncomplete(t, report, "opencode-permission-shape-unsupported")
 	}
 }
 
-func TestResolveFailsClosedForAmbiguousSourceOrder(t *testing.T) {
-	report := ResolveWithOptions([]source.SelectedSource{
-		{Identity: "same", Path: "/repo/a.json", Data: []byte(`{"permission":{"bash":"ask"}}`)},
-		{Identity: "same", Path: "/repo/b.json", Data: []byte(`{"permission":{"bash":"allow"}}`)},
-	}, supportedOptions())
-	if report.Completeness != model.CompletenessIncomplete || !hasFinding(report.Findings, "opencode-ambiguous-source-order") || len(report.Permissions) != 0 {
-		t.Fatalf("report=%+v", report)
-	}
-}
-
-func TestResolveUsesUnresolvedDefaultForRequestedMissingCapability(t *testing.T) {
+func TestResolveDeduplicatesRequestedCapabilitiesAndRejectsEmptyRequestedName(t *testing.T) {
 	options := supportedOptions()
-	options.RequestedCapabilities = []string{"edit"}
-	report := ResolveWithOptions([]source.SelectedSource{{Identity: "project", Path: "/repo/opencode.json", Data: []byte(`{"permission":{"bash":"allow"}}`)}}, options)
-	permission := permissionByCapability(report.Permissions, "edit")
-	steps := permission.Trace().Steps()
-	if report.Completeness != model.CompletenessIncomplete || permission.Effect() != model.EffectUnresolved || len(steps) != 1 || steps[0].Kind != model.TraceDefault || !hasFinding(report.Findings, "opencode-unresolved-default") {
-		t.Fatalf("report=%+v permission=%+v trace=%+v", report, permission, steps)
+	options.RequestedCapabilities = []string{"deploy", " read ", "deploy", " ", ""}
+	report := ResolveWithOptions(validSource(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`), options)
+	want := []string{"bash:ask:*", "deploy:unresolved:*", "edit:deny:*", "read:allow:*"}
+	if !hasFinding(report.Findings, "opencode-invalid-requested-capability") || !hasFinding(report.Findings, "opencode-unresolved-default") || !reflect.DeepEqual(permissionSummary(report.Permissions), want) {
+		t.Fatalf("report=%+v", report)
 	}
 }
 
-func TestResolveFailsClosedForMalformedUnknownAndRuntimeLimits(t *testing.T) {
-	tests := []struct {
-		name string
-		data string
-		code string
-	}{
-		{"malformed", `{"permission":`, "opencode-malformed"},
-		{"unknown effect", `{"permission":{"bash":"maybe"}}`, "opencode-unknown-effect"},
-		{"unknown permission object", `{"permission":{"bash":{"mode":"allow"}}}`, "opencode-unknown-permission"},
-		{"permission-bearing unknown top-level", `{"permissions":{"bash":"allow"}}`, "opencode-unknown-construct"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			report := ResolveWithOptions([]source.SelectedSource{{Identity: tt.name, Path: "/repo/opencode.json", Data: []byte(tt.data)}}, supportedOptions())
-			if report.Completeness != model.CompletenessIncomplete || !hasFinding(report.Findings, tt.code) {
-				t.Fatalf("report=%+v", report)
-			}
-		})
-	}
+func validSource(data string) []source.SelectedSource {
+	return []source.SelectedSource{{Identity: "project", Path: "/repo/opencode.json ", Data: []byte(data)}}
 }
-
-func permissionByCapability(permissions []model.Permission, capability string) model.Permission {
-	for _, permission := range permissions {
-		if permission.Capability() == capability {
-			return permission
-		}
+func permissionSummary(permissions []model.Permission) []string {
+	out := make([]string, len(permissions))
+	for i, permission := range permissions {
+		out[i] = permission.Capability() + ":" + string(permission.Effect()) + ":" + permission.Matcher()
 	}
-	return model.Permission{}
+	return out
+}
+func assertIncomplete(t *testing.T, report Report, code string) {
+	t.Helper()
+	if report.Completeness != model.CompletenessIncomplete || !hasFinding(report.Findings, code) || len(report.Permissions) != 0 {
+		t.Fatalf("report=%+v", report)
+	}
 }
 func contains(values []string, want string) bool {
 	for _, value := range values {
@@ -127,6 +135,6 @@ func hasFinding(findings []model.Finding, code string) bool {
 }
 
 func supportedOptions() Options {
-	entry := support.Entry{Target: "opencode", Version: "local-fixture", Construct: "permission", Fixture: "opencode-runtime", Evidence: "opencode-doc", PermissionBearing: true, DefaultsKnown: true, MatcherKnown: true, ConditionsKnown: true}
-	return Options{Version: "local-fixture", Support: support.Matrix{Entries: []support.Entry{entry}, Registry: support.Registry{Fixtures: map[string]bool{"opencode-runtime": true}, Evidence: map[string]bool{"opencode-doc": true}}}}
+	entry := support.Entry{Target: "opencode", Version: "1.18.27", Construct: "permission", Fixture: "opencode-1.18.27-legacy-permission-scalar", Evidence: "opencode-1.18.27-legacy-permission-scalar-source", PermissionBearing: true, DefaultsKnown: true, MatcherKnown: true, ConditionsKnown: true}
+	return Options{Version: "1.18.27", Support: support.Matrix{Entries: []support.Entry{entry}, Registry: support.Registry{Fixtures: map[string]bool{entry.Fixture: true}, Evidence: map[string]bool{entry.Evidence: true}}}}
 }

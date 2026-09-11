@@ -148,3 +148,11 @@ Completed task checkbox update: WU3-A3 is checked in `tasks.md`; WU3-B, WU3-C, a
 Remaining exact unchecked rows: `- [ ] WU3-B: Implement adapter conformance and activate only the proven production matrix row without changing app support claims. <!-- sdd-owner: implementation -->`; `- [ ] WU3-C: Integrate WU3 support behavior into the app; Issue #29 remains open until WU3-C. <!-- sdd-owner: implementation -->`; broad WU3 rows remain deferred.
 Rollback boundary: revert the WU3-A3 fixture, fixture/evidence registries, evidence docs, pinned tests, the WU3-A3 checkbox, and this progress block only.
 Deviations: none from the assigned slice; runtime effective policy, agents/modes, saved approvals, multiple sources, V2 arrays, resource maps, enforcement, security, and compliance remain excluded.
+## Work Unit 3-B1: Exact OpenCode parser/conformance cleanup
+Status: complete for intermediate PR 10 of 18, `Refs #29`; consumed alpha worktree status override, allowed edits only, final authored count 400 lines, no stage/commit/push/PR/review.
+### TDD Cycle Evidence
+| Phase | Evidence |
+|---|---|
+| SAFETY/RED | Baseline `go test ./internal/adapter/opencode -count=1` passed; focused RED failed on exact-version bypass, source identity/path/bounds, wildcard scalar fixture, invented object fixture, strict JSON shapes, and requested-capability cleanup. |
+| GREEN/TRIANGULATE/REFACTOR | Implemented exact 1.18.27 gate before `support.Validate`, one-source bound, token duplicate/trailing/key scan, exact scalar `read/edit/bash`, wildcard permissions, unresolved deduped requested capabilities, and removed invented matcher/condition/precedence/runtime helpers; focused/x25/race adapter tests passed. |
+| Verification/Rollback/Remaining | Passed support checked Load/Validate/CLI-exit2 focused test, `go test ./support -count=1`, `go test ./internal/app ./cmd/auditor -count=1`, `git diff --check`, `gofmt -l`, `go vet ./...`, `go test ./... -count=1`, `go build ./...`; matrix empty, B2/C deferred; rollback adapter files plus B1 OpenSpec edits. |
