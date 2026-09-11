@@ -3,9 +3,11 @@ package app
 
 import (
 	"context"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/adapter/opencode"
@@ -17,6 +19,7 @@ import (
 type Mode string
 type Target string
 type Category string
+type SupportStatus string
 
 const (
 	ModeVersion Mode = "version"
@@ -30,6 +33,10 @@ const (
 	UnsupportedOrIncomplete Category = "unsupported_or_incomplete"
 	InvalidRequest          Category = "invalid_request"
 	OperationalFailure      Category = "operational_failure"
+
+	SupportSupported   SupportStatus = "supported"
+	SupportUnsupported SupportStatus = "unsupported"
+	SupportUnresolved  SupportStatus = "unresolved"
 )
 
 type BuildInfo struct{ Version string }
@@ -44,13 +51,17 @@ type Request struct {
 }
 
 type Result struct {
-	Category     Category
-	Message      string
-	Build        BuildInfo
-	Completeness model.Completeness
-	Permissions  []model.Permission
-	Findings     []model.Finding
-	Limitations  []string
+	Category               Category
+	Message                string
+	Build                  BuildInfo
+	Target                 Target
+	RequestedTargetVersion string
+	SupportStatus          SupportStatus
+	SourceDigests          []string
+	Completeness           model.Completeness
+	Permissions            []model.Permission
+	Findings               []model.Finding
+	Limitations            []string
 }
 
 type options struct {
@@ -77,42 +88,106 @@ func audit(req Request, options options) Result {
 	build := normalize(req.Build)
 	files := reflect.ValueOf(options.files)
 	if files.Kind() == reflect.Pointer && files.IsNil() {
-		return Result{Category: OperationalFailure, Message: "source dependency unavailable", Build: build}
+		return auditResult(req, build, OperationalFailure, "source dependency unavailable", SupportUnresolved)
 	}
 	if req.Target != TargetOpenCode && req.Target != TargetClaudeCode || req.Root == "" || req.ExplicitConfig == "" {
-		return Result{Category: InvalidRequest, Message: "invalid audit request", Build: build}
+		return auditResult(req, build, InvalidRequest, "invalid audit request", SupportUnresolved)
 	}
 	if !lexicallyWithin(req.Root, req.ExplicitConfig) {
-		return Result{Category: InvalidRequest, Message: "config must be within root", Build: build}
+		return auditResult(req, build, InvalidRequest, "config must be within root", SupportUnresolved)
 	}
 	if req.Target == TargetClaudeCode {
-		return Result{Category: UnsupportedOrIncomplete, Message: "Claude Code is unsupported in this alpha", Build: build}
+		return auditResult(req, build, UnsupportedOrIncomplete, "Claude Code is unsupported in this alpha", SupportUnsupported)
 	}
 	if req.TargetVersion == "" {
-		return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode version evidence is missing", Build: build}
+		return auditResult(req, build, UnsupportedOrIncomplete, "OpenCode version evidence is missing", SupportUnresolved)
 	}
 	matrix, err := options.loadSupport()
 	if err != nil {
-		return Result{Category: OperationalFailure, Message: "support metadata unavailable", Build: build}
+		return auditResult(req, build, OperationalFailure, "support metadata unavailable", SupportUnresolved)
 	}
-	if result := support.Validate(matrix, support.Entry{Target: "opencode", Version: req.TargetVersion, Construct: "permission"}); result.Completeness != model.CompletenessComplete {
-		return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode support evidence is incomplete", Build: build, Completeness: result.Completeness, Findings: result.Findings}
+	if validation := support.Validate(matrix, support.Entry{Target: "opencode", Version: req.TargetVersion, Construct: "permission"}); validation.Completeness != model.CompletenessComplete {
+		status := SupportUnresolved
+		for _, finding := range validation.Findings {
+			if finding.Code() == "unsupported-version" {
+				status = SupportUnsupported
+			}
+		}
+		result := auditResult(req, build, UnsupportedOrIncomplete, "OpenCode support evidence is incomplete", status)
+		result.Findings = append([]model.Finding(nil), validation.Findings...)
+		return result
 	}
 
 	plan := opencode.DiscoveryPlan(req.Root, []string{req.ExplicitConfig})
 	selection := source.Execute(context.Background(), plan, options.files, source.CaptureEnv(plan.EnvKeys, options.lookupEnv))
 	if len(selection.Findings) != 0 || len(selection.Selected) != 1 {
-		return Result{Category: UnsupportedOrIncomplete, Message: "OpenCode source selection is incomplete", Build: build, Completeness: model.CompletenessIncomplete, Findings: sourceFindings(selection.Findings)}
-	}
-	report := opencode.ResolveWithOptions(selection.Selected, opencode.Options{Version: req.TargetVersion, Support: matrix})
-	result := Result{Build: build, Completeness: report.Completeness, Permissions: report.Permissions, Findings: report.Findings, Limitations: []string{"modeled-static-configuration"}}
-	if report.Completeness == model.CompletenessComplete && len(report.Findings) == 0 {
-		result.Category = CompleteNoFindings
+		result := auditResult(req, build, UnsupportedOrIncomplete, "OpenCode source selection is incomplete", SupportSupported)
+		result.SourceDigests = sourceDigests(selection.Selected)
+		result.Findings = sourceFindings(selection.Findings)
 		return result
 	}
-	result.Category = UnsupportedOrIncomplete
-	result.Message = "OpenCode audit is unsupported or incomplete"
+	report := opencode.ResolveWithOptions(selection.Selected, opencode.Options{Version: req.TargetVersion, Support: matrix})
+	result := auditResult(req, build, UnsupportedOrIncomplete, "OpenCode audit is unsupported or incomplete", SupportSupported)
+	result.SourceDigests = sourceDigests(selection.Selected)
+	result.Permissions = append([]model.Permission(nil), report.Permissions...)
+	result.Findings = append([]model.Finding(nil), report.Findings...)
+	if report.Completeness == model.CompletenessComplete && len(report.Findings) == 0 {
+		result.Category = CompleteNoFindings
+		result.Message = ""
+		result.Completeness = model.CompletenessComplete
+		return result
+	}
 	return result
+}
+
+func auditResult(req Request, build BuildInfo, category Category, message string, status SupportStatus) Result {
+	return Result{
+		Category:               category,
+		Message:                message,
+		Build:                  build,
+		Target:                 safeTarget(req.Target),
+		RequestedTargetVersion: req.TargetVersion,
+		SupportStatus:          status,
+		SourceDigests:          []string{},
+		Completeness:           model.CompletenessIncomplete,
+		Permissions:            []model.Permission{},
+		Findings:               []model.Finding{},
+		Limitations:            auditLimitations(req),
+	}
+}
+
+func safeTarget(target Target) Target {
+	if target == TargetOpenCode || target == TargetClaudeCode {
+		return target
+	}
+	return ""
+}
+
+func auditLimitations(req Request) []string {
+	if req.Target != TargetOpenCode {
+		return []string{}
+	}
+	return []string{"modeled-static-configuration"}
+}
+
+func sourceDigests(selected []source.SelectedSource) []string {
+	if len(selected) == 0 {
+		return []string{}
+	}
+	seen := make(map[string]bool, len(selected))
+	out := make([]string, 0, len(selected))
+	for _, item := range selected {
+		if len(item.Identity) != 64 || strings.ToLower(item.Identity) != item.Identity || seen[item.Identity] {
+			continue
+		}
+		if _, err := hex.DecodeString(item.Identity); err != nil {
+			continue
+		}
+		seen[item.Identity] = true
+		out = append(out, "sha256:"+item.Identity)
+	}
+	sort.Strings(out)
+	return out
 }
 
 func sourceFindings(findings []source.Finding) []model.Finding {
