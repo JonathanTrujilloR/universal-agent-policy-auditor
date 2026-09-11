@@ -44,7 +44,7 @@ func TestResolveRequiresExactlyOneSelectedSourceWithIdentityPathAndBoundedData(t
 		{[]source.SelectedSource{{Identity: "project", Path: "/repo/opencode.json", Data: make([]byte, maxBytes+1)}}, "opencode-source-data-too-large"},
 	}
 	for _, tt := range tests {
-		assertIncomplete(t, ResolveWithOptions(tt.sources, supportedOptions()), tt.code)
+		assertIncomplete(t, ResolveWithOptions(tt.sources, productionOptions(t)), tt.code)
 	}
 }
 
@@ -53,17 +53,20 @@ func TestResolveConformsExactOpenCode11827ScalarFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	report := ResolveWithOptions(validSource(string(fixture)), supportedOptions())
+	report := ResolveWithOptions(validSource(string(fixture)), productionOptions(t))
 	if report.Completeness != model.CompletenessComplete || len(report.Findings) != 0 {
 		t.Fatalf("report=%+v", report)
 	}
 	if got, want := permissionSummary(report.Permissions), []string{"bash:ask:*", "edit:deny:*", "read:allow:*"}; !reflect.DeepEqual(got, want) {
 		t.Fatalf("permissions=%v", got)
 	}
-	first := report.Permissions[0]
-	steps := first.Trace().Steps()
-	if first.Scope() != model.Scope("opencode") || len(first.Conditions()) != 0 || len(steps) != 1 || steps[0].Kind != model.TraceRule || steps[0].After != first.Effect() || len(first.Provenance()) != 1 || first.Provenance()[0].Location() != "/repo/opencode.json #permission.bash" {
-		t.Fatalf("permission=%+v trace=%+v", first, steps)
+	wantEffects := map[string]model.Effect{"bash": model.EffectAsk, "edit": model.EffectDeny, "read": model.EffectAllow}
+	for _, permission := range report.Permissions {
+		steps := permission.Trace().Steps()
+		wantLocation := "/repo/opencode.json #permission." + permission.Capability()
+		if permission.Effect() != wantEffects[permission.Capability()] || permission.Matcher() != "*" || permission.Scope() != model.Scope("opencode") || len(permission.Conditions()) != 0 || len(steps) != 1 || steps[0].Kind != model.TraceRule || steps[0].After != permission.Effect() || len(permission.Provenance()) != 1 || permission.Provenance()[0].Source() != "opencode" || permission.Provenance()[0].Location() != wantLocation {
+			t.Fatalf("permission=%+v trace=%+v wantLocation=%q", permission, steps, wantLocation)
+		}
 	}
 }
 
@@ -72,7 +75,7 @@ func TestResolveRejectsOldInventedObjectMatcherConditionFixture(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertIncomplete(t, ResolveWithOptions(validSource(string(fixture)), supportedOptions()), "opencode-permission-shape-unsupported")
+	assertIncomplete(t, ResolveWithOptions(validSource(string(fixture)), productionOptions(t)), "opencode-permission-shape-unsupported")
 }
 
 func TestResolveStrictlyRejectsUnsupportedJSONShapesAtomically(t *testing.T) {
@@ -86,13 +89,13 @@ func TestResolveStrictlyRejectsUnsupportedJSONShapesAtomically(t *testing.T) {
 		`{"permission":{"read":"allow","edit":"deny","bash":"ask"},"tools":{}}`,
 		`{"permission":{"read":"allow","edit":"deny"}}`,
 	} {
-		report := ResolveWithOptions(validSource(data), supportedOptions())
+		report := ResolveWithOptions(validSource(data), productionOptions(t))
 		assertIncomplete(t, report, "opencode-permission-shape-unsupported")
 	}
 }
 
 func TestResolveDeduplicatesRequestedCapabilitiesAndRejectsEmptyRequestedName(t *testing.T) {
-	options := supportedOptions()
+	options := productionOptions(t)
 	options.RequestedCapabilities = []string{"deploy", " read ", "deploy", " ", ""}
 	report := ResolveWithOptions(validSource(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`), options)
 	want := []string{"bash:ask:*", "deploy:unresolved:*", "edit:deny:*", "read:allow:*"}
@@ -134,7 +137,11 @@ func hasFinding(findings []model.Finding, code string) bool {
 	return false
 }
 
-func supportedOptions() Options {
-	entry := support.Entry{Target: "opencode", Version: "1.18.27", Construct: "permission", Fixture: "opencode-1.18.27-legacy-permission-scalar", Evidence: "opencode-1.18.27-legacy-permission-scalar-source", PermissionBearing: true, DefaultsKnown: true, MatcherKnown: true, ConditionsKnown: true}
-	return Options{Version: "1.18.27", Support: support.Matrix{Entries: []support.Entry{entry}, Registry: support.Registry{Fixtures: map[string]bool{entry.Fixture: true}, Evidence: map[string]bool{entry.Evidence: true}}}}
+func productionOptions(t *testing.T) Options {
+	t.Helper()
+	matrix, err := support.Load(os.DirFS("../../../support"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Options{Version: "1.18.27", Support: matrix}
 }

@@ -1,5 +1,17 @@
 {
   "schema": "support-matrix/v1",
-  "entries": [],
-  "gate": "No OpenCode or Claude Code version is supported until a version-pinned entry has official documentation, upstream source or executable evidence, and a passing fixture."
+  "entries": [
+    {
+      "target": "opencode",
+      "version": "1.18.27",
+      "construct": "permission",
+      "fixture": "opencode-1.18.27-legacy-permission-scalar",
+      "evidence": "opencode-1.18.27-legacy-permission-scalar-source",
+      "permission_bearing": true,
+      "defaults_known": true,
+      "matcher_known": true,
+      "conditions_known": true
+    }
+  ],
+  "gate": "Only OpenCode 1.18.27 legacy scalar permission entries with explicit read, edit, and bash actions are internally adapter-supported. App/CLI support remains unsupported until WU3-C wires production support behavior."
 }

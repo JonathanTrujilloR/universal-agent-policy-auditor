@@ -156,3 +156,26 @@ Status: complete for intermediate PR 10 of 18, `Refs #29`; consumed alpha worktr
 | SAFETY/RED | Baseline `go test ./internal/adapter/opencode -count=1` passed; focused RED failed on exact-version bypass, source identity/path/bounds, wildcard scalar fixture, invented object fixture, strict JSON shapes, and requested-capability cleanup. |
 | GREEN/TRIANGULATE/REFACTOR | Implemented exact 1.18.27 gate before `support.Validate`, one-source bound, token duplicate/trailing/key scan, exact scalar `read/edit/bash`, wildcard permissions, unresolved deduped requested capabilities, and removed invented matcher/condition/precedence/runtime helpers; focused/x25/race adapter tests passed. |
 | Verification/Rollback/Remaining | Passed support checked Load/Validate/CLI-exit2 focused test, `go test ./support -count=1`, `go test ./internal/app ./cmd/auditor -count=1`, `git diff --check`, `gofmt -l`, `go vet ./...`, `go test ./... -count=1`, `go build ./...`; matrix empty, B2/C deferred; rollback adapter files plus B1 OpenSpec edits. |
+
+## Work Unit 3-B2: Production OpenCode support row activation
+
+Status: implementation complete for intermediate PR 11 of 18, `Refs #29`; lifecycle and delivery remain parent-owned.
+
+### TDD evidence
+
+| Phase | Evidence |
+|---|---|
+| SAFETY / RED | Baseline support and adapter tests passed; focused B2 tests then failed while the checked matrix had zero rows. |
+| GREEN | Added exactly one checked `opencode` / `1.18.27` / `permission` row linked to the pinned A3 fixture and evidence; focused tests passed. |
+| TRIANGULATE | Covered the exact tuple, IDs, four scoped flags, nearby version, Claude, unknown construct, false flags, missing references, production adapter conformance, invented object rejection, and unresolved requested capabilities. |
+| REFACTOR | Adapter tests load checked production metadata; exact CLI sentinel remains `stdout="unsupported_or_incomplete\n"`, empty stderr, exit 2. |
+
+Focused support command passed: `go test ./support -run 'TestLoadActivatesOnlyCheckedInOpenCodeScalarPermissionRow|TestCheckedInOpenCodeMatrixRejectsMissingReferences|TestValidateRejectsFalseSemanticFlagsOnReferencedRows|TestLoadRejectsMetadataIntegrityFailures|TestCheckedInOpenCodeAuditCLIStillExitsUnsupported' -count=1`.
+Focused adapter command passed: `go test ./internal/adapter/opencode -run 'TestResolveConformsExactOpenCode11827ScalarFixture|TestResolveRejectsOldInventedObjectMatcherConditionFixture|TestResolveDeduplicatesRequestedCapabilitiesAndRejectsEmptyRequestedName|TestResolveRequiresExactVersionBeforeSupportValidation|TestResolveStrictlyRejectsUnsupportedJSONShapesAtomically' -count=1`.
+Verification also passed: package tests at count 25, race tests, app/CLI tests, `git diff --check`, gofmt, vet, full suite, and build.
+
+Boundary: the singleton row proves only the static legacy scalar subset. Explicit `read`, `edit`, and `bash` mean no defaults are inferred; `*` is limited to scalar migration; admitted rules have no conditions. Resource maps, V2 authoring, agents/modes, multiple sources, runtime behavior, enforcement, security, and compliance remain excluded.
+
+Changed files: `support/matrix.json`, `support/matrix_test.go`, `internal/adapter/opencode/opencode_test.go`, `support/evidence.md`, and the two OpenSpec progress artifacts. WU3-B2 alone is checked; WU3-C and broad WU3 acceptance remain pending.
+
+Rollback: remove the singleton row, B2 production-binding tests and evidence wording, the B2 task update, and this block; preserve A3 evidence and B1 parser behavior.
