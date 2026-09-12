@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -42,7 +41,6 @@ const (
 )
 
 var (
-	versionToken    = regexp.MustCompile(`^v?[0-9]{1,8}(\.[0-9]{1,8}){0,2}(-[a-z0-9-]{1,16}(\.[a-z0-9-]{1,16})*)?$`)
 	categories      = map[app.Category]Category{app.CompleteNoFindings: CategoryCompleteNoFindings, app.UnsupportedOrIncomplete: CategoryUnsupportedOrIncomplete, app.InvalidRequest: CategoryInvalidRequest, app.OperationalFailure: CategoryOperationalFailure}
 	targets         = map[app.Target]Target{"": "", app.TargetOpenCode: TargetOpenCode, app.TargetClaudeCode: TargetClaudeCode}
 	supports        = map[app.SupportStatus]SupportStatus{app.SupportSupported: SupportSupported, app.SupportUnsupported: SupportUnsupported, app.SupportUnresolved: SupportUnresolved}
@@ -88,10 +86,10 @@ func NewReport(result app.Result) (Report, error) {
 		return Report{}, ErrUnsafeReport
 	}
 	withheld := false
-	if data.toolVersion, ok = safeVersion(result.Build.Version, false); !ok {
+	if data.toolVersion, ok = safeToolVersion(result.Build.Version); !ok {
 		withheld = true
 	}
-	if data.requestedVersion, ok = safeVersion(result.RequestedTargetVersion, true); !ok {
+	if data.requestedVersion, ok = safeRequestedVersion(result.Target, result.RequestedTargetVersion); !ok {
 		withheld = true
 	}
 	if data.sources, ok = safeDigests(result.SourceDigests); !ok {
@@ -178,11 +176,16 @@ func appFindingCount(values []Finding) int {
 	}
 	return count
 }
-func safeVersion(value string, emptyOK bool) (string, bool) {
-	if value == "" {
-		return "", emptyOK
+
+// Versions are public constants, not a syntax-based channel for local metadata.
+func safeToolVersion(value string) (string, bool) {
+	if value == "dev" || value == "v0.1.0-alpha.1" {
+		return value, true
 	}
-	if value == "dev" || len(value) <= 40 && versionToken.MatchString(value) {
+	return "", false
+}
+func safeRequestedVersion(target app.Target, value string) (string, bool) {
+	if value == "" || target == app.TargetOpenCode && value == "1.18.27" {
 		return value, true
 	}
 	return "", false

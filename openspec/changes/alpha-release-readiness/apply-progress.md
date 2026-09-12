@@ -206,3 +206,17 @@ Rollback: revert WU4-A1 app metadata/tests and this OpenSpec update only; preser
 Remaining unchecked implementation rows include WU4-A2, WU4-A3, WU4-B, WU5-WU9; parent lifecycle rows remain deferred.
 ## Work Unit 4-A2: Redaction core
 PR 14/21 (`Refs #36`), A2 only; A3/B deferred. Prior recorded RED: duplicate findings/state acceptance failures; remediation rejects unrelated trace evidence and accepts the reachable OpenCode unsupported-version result with fixed finding projection and exact sole trace/provenance evidence equality; GREEN: `go test ./internal/redact -count=25`, `go test -race ./internal/redact -count=1`, `git diff --check`, `gofmt -w internal/redact/report.go internal/redact/report_test.go`, `go vet ./...`, `go test ./... -count=1`, `go build ./...` passed. Rollback: report.go/report_test.go and A2 task/progress edits. Final authored count: 400 additions+deletions (cap 400); no delivery actions.
+
+## Work Unit 4-A3: Privacy hardening, fuzzing and documentation
+Status: implementation complete for intermediate PR 15/21, `Refs #36`; settlement/delivery remain parent-owned. A1 PR #37 and A2 PR #38 are merged; B remains pending.
+Safety: `go test ./... -count=1` passed before edits.
+RED: `go test ./internal/redact -run 'TestPrivacy' -count=1` failed on the permissive tool-version policy.
+GREEN: the same focused command passed with exact public version allowlists; empty requested version preserves A2 missing/unresolved semantics.
+TRIANGULATE: discarded metadata, hostile paths/tokens/control/invalid UTF-8/confusables, unknown codes, generic errors and repeated nested-copy mutation are covered.
+REFACTOR: removed syntax-based version admission; retained existing deep-copy implementation and protected it with accessor projection tests.
+Verification: `go test ./internal/redact -count=25`; `go test -race ./internal/redact -count=1` passed.
+Fuzz: `go test ./internal/redact -run '^$' -fuzz '^FuzzReportPrivacy$' -fuzztime=3s -parallel=1` passed with eight seeds.
+Full checks: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go test ./... -count=1`; `go build ./...` passed.
+Scope: safe report/version policy, privacy tests, report-safety docs and these tracking edits only; no renderer or CLI changes.
+Workload: 217 authored additions+deletions, below 400; no compression or delivery actions.
+Rollback: revert A3 report policy, privacy test, report-safety document and A3 task/progress edits only; preserve A1/A2.
