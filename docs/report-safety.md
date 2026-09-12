@@ -55,8 +55,52 @@ A sanitized unsupported result therefore retains the closed state without local 
 ```
 
 No raw application/model values or injectable output DTOs are accepted.
-CLI activation and human rendering remain WU5: the source-built CLI is still
-category-only and pre-release. JSON adds no comparison, enforcement, security,
+CLI activation remains WU5-B: the source-built CLI is still category-only and
+pre-release; `--format text` and JSON selection are not wired yet. JSON adds no comparison, enforcement, security,
 compliance, anonymity, or other deferred guarantees. Renderer golden tests pin
 required fields, safe digests, empty arrays, exits and 100 byte-identical repeats:
 `go test ./internal/render/json -count=25`.
+
+## Plain human layout
+
+`internal/render/text.Render` accepts only valid safe reports and returns complete
+bytes, or nil bytes with the fixed error `text: invalid report`. It preserves
+redacted collection order. Lines appear in this order: Tool, Result, Findings,
+Target, Requested version, Support status, Completeness, Source digests,
+Permissions, Limitations. Empty sections and empty requested versions are omitted;
+an empty target is `Target:`. Empty tool versions add no space after the tool name.
+Findings contain codes only and precede the target so uncertainty stays visible.
+
+Exact unsupported example (ending with one newline):
+
+```text
+Tool: universal-agent-policy-auditor
+Result: unsupported_or_incomplete (exit 2)
+Findings:
+- redact-version-withheld
+- unsupported-version
+Target: opencode
+Support status: unsupported
+Completeness: incomplete
+Limitations:
+- modeled-static-configuration
+```
+
+Nonempty source and permission sections use this fixed layout (the digest below
+is illustrative, not proof of source or evidence origin):
+
+```text
+Source digests:
+- sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+Permissions:
+- capability=bash; effect=ask; scope=opencode; matcher=*; provenance=[sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855]
+```
+
+Permission fields always use that order and punctuation; provenance contains only
+digests, separated by `, ` if plural. Output has exactly one final newline and no
+trailing spaces. There is no ANSI/color, terminal/TTY detection, width wrapping,
+locale, environment, hostname, clock, path lookup, or pager dependency. Rendering
+adds no guarantees beyond the safe-report boundary described above. Tests pin
+success, unsupported/incomplete, invalid exit 3, operational exit 4, omitted
+sections, canary absence and 100 independent byte-identical renders:
+`go test ./internal/render/text -count=25`.

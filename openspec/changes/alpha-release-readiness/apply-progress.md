@@ -234,3 +234,16 @@ Full checks passed: `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
 Acceptance: WU4 implementation and aggregate evidence complete; WU5+ and parent delivery gates remain pending.
 Rollback: revert B renderer/tests, report-safety JSON wording and B task/progress edits only; preserve A1/A2/A3 boundaries above.
 Workload: `git diff --check` passed; final numstat totals 242 additions + 7 deletions = 249; cap 400, no compression or delivery/review actions.
+
+## Work Unit 5-A: Plain human renderer
+Status: implementation complete for intermediate PR 17/22, `Refs #41`; WU4-B PR #40 merged and issue #36 closed; WU5-B/CLI remains pending.
+Scope: valid `redact.Report` only; no app/model/redact/JSON/CLI/README changes or delivery/review actions.
+RED: `go test ./internal/render/text -count=1` failed before implementation: no non-test Go files in the new text package.
+GREEN: the same command passed after adding complete-byte `Render` and fixed `text: invalid report` rejection with nil bytes.
+TRIANGULATE: exact success/unsupported/incomplete/invalid3/operational4/Claude goldens, withheld versions, reserved exit1 rejection, ordered/deduplicated source digests, no canary and 100 independent repeats passed.
+REFACTOR: local line helper keeps empty target/tool fields free of trailing spaces; `gofmt -w internal/render/text/report.go internal/render/text/report_test.go` passed.
+Focused verification passed: `go test ./internal/render/text -count=25`; `go test -race ./internal/render/text -count=1`.
+Full verification passed: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
+Acceptance: stable plain layout, findings before target, omitted empty sections, UTF-8, one final newline, no ANSI or ambient inputs; no added guarantees.
+Workload: 304 authored additions+deletions including both new Go files; hard cap 400, no compression.
+Rollback: revert text renderer/tests, human-layout report-safety wording, WU5-A task edits and this block only; retain merged WU4 and prior history.
