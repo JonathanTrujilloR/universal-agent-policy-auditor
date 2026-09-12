@@ -220,3 +220,17 @@ Full checks: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go test ./... -c
 Scope: safe report/version policy, privacy tests, report-safety docs and these tracking edits only; no renderer or CLI changes.
 Workload: 217 authored additions+deletions, below 400; no compression or delivery actions.
 Rollback: revert A3 report policy, privacy test, report-safety document and A3 task/progress edits only; preserve A1/A2.
+
+## Work Unit 4-B: Versioned JSON
+Status: implementation complete for final PR 16/21; A1/#37, A2/#38, A3/#39 merged; issue #36 stays open until parent delivery.
+Safety: `go test ./... -count=1` passed before edits.
+RED: `go test ./internal/render/json -count=1` failed because the renderer package had no production Go files.
+GREEN: the same focused command passed after adding valid-report-only `Marshal` and a fixed invalid-report error.
+TRIANGULATE: exact success/unsupported/incomplete goldens, exits 0/2/3/4, reserved category rejection, nil arrays, canary absence and 100 repeats passed.
+REFACTOR: private ordered structs retain standard JSON escaping; returned bytes are independent; CLI activation stays WU5.
+Focused checks passed: `go test ./internal/render/json -count=25`; `go test -race ./internal/render/json -count=1`.
+Formatting passed: `gofmt -w internal/render/json/report.go internal/render/json/report_test.go`; `gofmt -l .`.
+Full checks passed: `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
+Acceptance: WU4 implementation and aggregate evidence complete; WU5+ and parent delivery gates remain pending.
+Rollback: revert B renderer/tests, report-safety JSON wording and B task/progress edits only; preserve A1/A2/A3 boundaries above.
+Workload: `git diff --check` passed; final numstat totals 242 additions + 7 deletions = 249; cap 400, no compression or delivery/review actions.
