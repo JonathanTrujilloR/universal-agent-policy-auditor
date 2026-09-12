@@ -247,3 +247,16 @@ Full verification passed: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go 
 Acceptance: stable plain layout, findings before target, omitted empty sections, UTF-8, one final newline, no ANSI or ambient inputs; no added guarantees.
 Workload: 304 authored additions+deletions including both new Go files; hard cap 400, no compression.
 Rollback: revert text renderer/tests, human-layout report-safety wording, WU5-A task edits and this block only; retain merged WU4 and prior history.
+
+## Work Unit 5-B: Audit CLI formats
+Status: implementation complete for final PR 18/22; WU5-A PR #42 merged; final delivery alone closes issue #41.
+Scope: CLI transport/tests, README/report-safety, and task/progress tracking only; no app/redaction/renderer semantic changes.
+RED: explicit text/JSON CLI tests returned `invalid_request` before suffix parsing and renderer wiring.
+GREEN: strict audit-only `--format text|json` and text-only `--no-color` produce safe complete report bytes; no-format audit/version result bytes remain unchanged, including explicit empty version evidence; help intentionally advertises new flags.
+TRIANGULATE: empty-version regression failed with stderr/3 before correction, then passed with legacy stdout/2 and explicit-format rejection before app; syntax-before-I/O, supported/incomplete/Claude/semantic-invalid results, failure seams, short/error writes, canary absence, real binary execution, and target nonmutation pass.
+REFACTOR: unexported dependencies isolate failure tests; `writeExact` enforces one full write without diagnostic leakage.
+Focused checks passed: `go test ./cmd/auditor -count=25`; `go test -race ./cmd/auditor -count=1`.
+Full checks passed: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
+Acceptance: WU5 A/B and aggregate evidence complete; version JSON and exit 1 stay deferred; WU6+ remain pending.
+Workload: 399 authored additions+deletions, hard cap 400; redundant fixture assertion removed, no production compression or delivery actions.
+Rollback: revert B CLI/tests and activation docs/task/progress only; retain app, redaction, JSON, and WU5-A text renderer.

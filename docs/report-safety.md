@@ -36,8 +36,8 @@ repeated access and nested aliasing. Run `go test ./internal/redact -count=25` a
 `go test ./internal/redact -run '^$' -fuzz '^FuzzReportPrivacy$' -fuzztime=3s -parallel=1`.
 Fuzzing checks bounded adversarial projections, not exhaustive privacy proof.
 
-Later integration must map a redaction error to `operational_failure` / exit `4`
-and must not print the rejected result. `internal/render/json.Marshal` now accepts
+Explicit CLI formats map redaction/render errors or empty output to only
+`operational_failure` on stderr / exit `4`, never the rejected result or raw error. `internal/render/json.Marshal` now accepts
 only valid reports and returns complete `auditor-report/v1alpha1` JSON bytes with
 one trailing newline; invalid reports return no bytes and `json: invalid report`.
 The alpha schema is not stable. Field order is `schema`, `tool`, `result`,
@@ -55,8 +55,17 @@ A sanitized unsupported result therefore retains the closed state without local 
 ```
 
 No raw application/model values or injectable output DTOs are accepted.
-CLI activation remains WU5-B: the source-built CLI is still category-only and
-pre-release; `--format text` and JSON selection are not wired yet. JSON adds no comparison, enforcement, security,
+No-format audit/version results remain byte-compatible; help intentionally advertises new flags. Audit-only
+`--format text` and `--format json` select safe reports after one application run.
+The exact ordered grammar and examples are in the [README](../README.md#source-built-audit-output).
+`--no-color` is a no-op only after `--format text`; JSON plus no-color is invalid.
+Help/version do not accept formats; version JSON remains deferred. Exit 1 is reserved.
+Explicit-format empty/flag-prefixed values are syntax errors; no-format values retain app validation.
+Syntactic errors produce only `invalid_request` on stderr / exit 3 before application
+I/O. Valid explicit requests render safe categories 0/2/3/4 entirely to stdout,
+with empty stderr. A complete renderer buffer is written once; short/error writes
+return 4 without appending diagnostics. Sentinel write failures also return 4.
+JSON adds no comparison, enforcement, security,
 compliance, anonymity, or other deferred guarantees. Renderer golden tests pin
 required fields, safe digests, empty arrays, exits and 100 byte-identical repeats:
 `go test ./internal/render/json -count=25`.

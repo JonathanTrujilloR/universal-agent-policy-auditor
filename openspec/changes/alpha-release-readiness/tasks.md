@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 17 of 22, WU5-A human renderer, intermediate `Refs #41`. Planning PRs A-D, WU3, and WU4 are delivered; WU4-A1 PR `#37`, A2 PR `#38`, A3 PR `#39`, and B PR `#40` are merged; issue `#36` is closed. Approved issue `#41` governs WU5-A/B; B CLI integration remains pending. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 18 of 22, final WU5-B CLI format activation. Planning PRs A-D, WU3, WU4, and WU5-A PR `#42` are delivered; issue `#36` is closed. Approved issue `#41` governs WU5-A/B; only final B delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -105,16 +105,16 @@ Issue gate: approved issue `#36` (`status:approved`, output/redaction/JSON scope
 Issue gate: approved issue `#41`, split into A renderer and B CLI activation in the 22-PR chain. WU5-A forecast: 300-390 authored lines, hard cap 400. A surfaces: `internal/render/text/report.go`, `internal/render/text/report_test.go`, `docs/report-safety.md`, and these two tracking artifacts. B owns CLI selection/tests including JSON activation; no app/model/redact/JSON/CLI changes in A.
 
 - [x] WU5-A (PR 17/22, `Refs #41`): Deterministic valid-report-only plain text, complete bytes or fixed generic error, exact goldens, exits 0/2/3/4, reserved exit 1 rejection, no color/ambient inputs, no canary, 100 independent repeats, formatting checks and bounded rollback; commands/count in apply-progress. <!-- sdd-owner: implementation -->
-- [ ] WU5-B (PR 18/22): Wire CLI text/JSON format selection and `--no-color` behavior with focused CLI tests and docs; retain category/exit semantics and close issue #41 only at final delivery. <!-- sdd-owner: implementation -->
+- [x] WU5-B (PR 18/22): Wire audit-only CLI text/JSON selection and `--no-color` no-op with strict ordered grammar, legacy default compatibility, single-write transport, fixed failure routing, real CLI tests, docs, and final issue #41 delivery. <!-- sdd-owner: implementation -->
 
-The aggregate WU5 rows below remain pending until B integration evidence exists; A does not add differences/comparison semantics.
+The aggregate WU5 evidence below covers both bounded slices; neither adds comparison semantics.
 
-- [ ] RED: Add failing tests for concise deterministic text output, uncertainty first, no color dependency with `--no-color`, limitations visibility, and no raw sensitive values; focused command: `go test ./internal/render/text ./cmd/auditor`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Implement text renderer over redacted safe report only and wire CLI format selection without changing app semantics. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Cover unsupported Claude, unsupported OpenCode evidence, incomplete source selection, and findings/differences summaries. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Keep human wording stable, short, and claim-safe; full command: `gofmt -l . && go vet ./... && go test ./...`. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence with text snapshots/readback showing static-analysis limitations and unsupported states. <!-- sdd-owner: implementation -->
-- [ ] Record rollback boundary: remove `internal/render/text` and CLI text wiring while retaining JSON/redaction behavior. <!-- sdd-owner: implementation -->
+- [x] RED: Focused renderer tests failed before A; focused explicit-format CLI tests failed with `invalid_request` before B. <!-- sdd-owner: implementation -->
+- [x] GREEN: Human rendering consumes only safe reports; audit-only text/JSON selection preserves app semantics and no-format audit/version result bytes; help intentionally advertises new flags. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Cover unsupported Claude/OpenCode, missing/unsafe versions, incomplete sources, semantic invalidity, syntax-before-I/O, failure seams, no-color equality, short/error writes, canary absence, real binary output, and nonmutation. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Stable claim-safe output; `gofmt -l .`, `go vet ./...`, `go test ./...`, and `go build ./...` pass. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence in exact text/JSON outputs, README/report-safety readback, repeated/race tests, and apply-progress. <!-- sdd-owner: implementation -->
+- [x] Record rollback boundary: A removes text renderer/docs; B removes CLI format wiring/docs while retaining redaction and JSON. <!-- sdd-owner: implementation -->
 
 ## Work Unit 6: #19 Comparison Integration
 
@@ -133,7 +133,7 @@ Issue gate: blocked until a dedicated CI/release-build Work Unit issue is approv
 
 - [ ] RED: Add failing workflow/script tests or dry-run checks for formatting, vetting, tests, Linux amd64 build, version injection, checksum generation, and smoke command capture; focused command: relevant script dry-run plus `go test ./...`. <!-- sdd-owner: implementation -->
 - [ ] GREEN: Add CI/release readiness workflow or scripts for `gofmt -l .`, `go vet ./...`, `go test ./...`, `GOOS=linux GOARCH=amd64 go build`, `checksums.txt`, and smoke commands without publishing. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Add smoke coverage for `auditor version --format json` and `audit opencode` against the checked-in supported fixture only after Work Unit 3 evidence exists. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add smoke coverage for plain `auditor version` and explicit-format `audit opencode` against the checked-in supported fixture; version JSON remains deferred. <!-- sdd-owner: implementation -->
 - [ ] REFACTOR: Keep release helpers deterministic and free of package-manager, signing, provenance, extra-platform, GitHub publication, or tag creation side effects. <!-- sdd-owner: implementation -->
 - [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
 - [ ] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
