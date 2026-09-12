@@ -190,3 +190,17 @@ Final verification passed: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go
 Acceptance: source-built CLI exact fixture/version from unrelated cwd exits 0 with stdout `complete_no_findings\n` and empty stderr; wrong/unsupported and incomplete inputs fail closed; category-only CLI emits no raw config/path/error details.
 WU3 aggregate rows are now checked from A1/A2/A3/B1/B2/C evidence; remaining unchecked implementation rows are WU4-WU9 renderer/comparison/release/pilot slices, and parent lifecycle gates remain deferred.
 Rollback: revert WU3-C app/support embedding/docs/tests and this OpenSpec update; preserve merged WU3-A/B evidence unless reverting all WU3 broad acceptance rows together.
+
+## Work Unit 4-A1: App metadata for later redaction
+Status: complete for intermediate PR 13 of 21, `Refs #36`; no stage/commit/push/PR/review/tag/release action.
+Scope: app metadata and adjacent tests plus WU4-A1 OpenSpec tracking only; redaction, renderers, CLI format changes, and later slices remain deferred.
+Workload: issue #36 four-slice chain; WU4-A1 only, A2 redaction core/A3 privacy/B JSON pending; CLI JSON activation remains WU5.
+TDD evidence: SAFETY `go test ./internal/app ./cmd/auditor ./support -count=1` passed; RED focused app metadata tests failed to compile on missing `SupportStatus`/source digest metadata; GREEN focused app metadata tests passed.
+TRIANGULATE: covered exact success source digest, malformed admitted input, source error, missing/nearby version, Claude, unknown target withholding, invalid path/request, metadata load error, valid deterministic/deduped/nonaliasing digests, and unchanged target files.
+REFACTOR: added `auditResult`, audit limitations, and `sourceDigests` helper so every audit return carries closed metadata without changing CLI output.
+Verification passed: `go test ./internal/app -count=1`; `go test ./internal/app ./cmd/auditor ./support -count=1`; `go test ./internal/app -count=25`; `go test -race ./internal/app -count=1`.
+Verification passed: `git diff --check`; `test -z "$(gofmt -l .)"`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`.
+Changed files: `internal/app/app.go`, `internal/app/app_test.go`, `openspec/changes/alpha-release-readiness/tasks.md`, and this progress file.
+Final authored churn: 230 additions + 31 deletions = 261 authored lines; hard cap 400.
+Rollback: revert WU4-A1 app metadata/tests and this OpenSpec update only; preserve WU3 app support behavior and leave A2/A3/B pending.
+Remaining unchecked implementation rows include WU4-A2, WU4-A3, WU4-B, WU5-WU9; parent lifecycle rows remain deferred.

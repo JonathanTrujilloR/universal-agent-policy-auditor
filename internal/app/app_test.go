@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io/fs"
 	"os"
@@ -9,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
 	"github.com/jkelevra/universal-agent-policy-auditor/support"
 )
 
@@ -185,6 +189,88 @@ func TestAuditOperationalAndReadFailuresFailClosed(t *testing.T) {
 	}
 }
 
+func TestAuditBranchMetadataIsClosedAndConsistent(t *testing.T) {
+	valid := []byte(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`)
+	malformed := []byte(`{`)
+	root, config := writeConfig(t, valid)
+	missingRoot := filepath.Join(t.TempDir(), "missing")
+
+	for _, tt := range []struct {
+		name           string
+		req            Request
+		body           []byte
+		options        options
+		wantCategory   Category
+		wantSupport    SupportStatus
+		wantComplete   model.Completeness
+		wantLimit      bool
+		wantDigestPath string
+	}{
+		{"success", Request{Mode: ModeAudit, Target: TargetOpenCode, Root: root, ExplicitConfig: config, TargetVersion: "1.18.27"}, nil, options{}, CompleteNoFindings, SupportSupported, model.CompletenessComplete, true, config},
+		{"malformed admitted input", Request{Mode: ModeAudit, Target: TargetOpenCode, TargetVersion: "1.18.27"}, malformed, options{}, UnsupportedOrIncomplete, SupportSupported, model.CompletenessIncomplete, true, ""},
+		{"source error after admitted version", Request{Mode: ModeAudit, Target: TargetOpenCode, Root: missingRoot, ExplicitConfig: filepath.Join(missingRoot, "opencode.json"), TargetVersion: "1.18.27"}, nil, options{}, UnsupportedOrIncomplete, SupportSupported, model.CompletenessIncomplete, true, ""},
+		{"missing version", Request{Mode: ModeAudit, Target: TargetOpenCode, Root: root, ExplicitConfig: config}, nil, options{}, UnsupportedOrIncomplete, SupportUnresolved, model.CompletenessIncomplete, true, ""},
+		{"nearby version", Request{Mode: ModeAudit, Target: TargetOpenCode, Root: root, ExplicitConfig: config, TargetVersion: "1.18.28"}, nil, options{}, UnsupportedOrIncomplete, SupportUnsupported, model.CompletenessIncomplete, true, ""},
+		{"claude", Request{Mode: ModeAudit, Target: TargetClaudeCode, Root: root, ExplicitConfig: config, TargetVersion: "1"}, nil, options{}, UnsupportedOrIncomplete, SupportUnsupported, model.CompletenessIncomplete, false, ""},
+		{"invalid path", Request{Mode: ModeAudit, Target: TargetOpenCode, Root: ".", ExplicitConfig: "opencode.json", TargetVersion: "1.18.27"}, nil, options{}, InvalidRequest, SupportUnresolved, model.CompletenessIncomplete, true, ""},
+		{"metadata load error", Request{Mode: ModeAudit, Target: TargetOpenCode, Root: root, ExplicitConfig: config, TargetVersion: "1.18.27"}, nil, options{loadSupport: func() (support.Matrix, error) { return support.Matrix{}, errors.New("boom") }}, OperationalFailure, SupportUnresolved, model.CompletenessIncomplete, true, ""},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			req := tt.req
+			if tt.body != nil {
+				req.Root, req.ExplicitConfig = writeConfig(t, tt.body)
+			}
+			got := runWithOptions(req, tt.options)
+			assertAuditMetadata(t, got, req.Target, req.TargetVersion, tt.wantCategory, tt.wantSupport, tt.wantComplete)
+			if tt.wantLimit != hasString(got.Limitations, "modeled-static-configuration") {
+				t.Fatalf("limitations=%v want modeled-static-configuration present=%v", got.Limitations, tt.wantLimit)
+			}
+			if got.SourceDigests == nil {
+				t.Fatalf("SourceDigests is nil")
+			}
+			if tt.wantDigestPath != "" {
+				wantDigest := "sha256:" + sha256Hex(tt.wantDigestPath)
+				if len(got.SourceDigests) != 1 || got.SourceDigests[0] != wantDigest {
+					t.Fatalf("SourceDigests=%v want [%s]", got.SourceDigests, wantDigest)
+				}
+				if got.SourceDigests[0] == tt.wantDigestPath || got.SourceDigests[0] == string(valid) {
+					t.Fatalf("source digest leaked raw source identity material: %q", got.SourceDigests[0])
+				}
+			}
+		})
+	}
+	unknown := Run(Request{Mode: ModeAudit, Target: Target("private-target"), Root: root, ExplicitConfig: config, TargetVersion: "1"})
+	if unknown.Category != InvalidRequest || unknown.Target != "" {
+		t.Fatalf("unknown target metadata=%+v", unknown)
+	}
+}
+
+func TestSourceDigestsAreDeterministicDeduplicatedAndNonAliased(t *testing.T) {
+	a := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	b := "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	z := "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+	selected := []source.SelectedSource{
+		{Identity: b, Path: "/private/b", Data: []byte("secret-b")},
+		{Identity: a, Path: "/private/a", Data: []byte("secret-a")},
+		{Identity: b, Path: "/private/duplicate", Data: []byte("secret-duplicate")},
+	}
+	got := sourceDigests(selected)
+	want := []string{"sha256:" + a, "sha256:" + b}
+	if !sameStrings(got, want) {
+		t.Fatalf("sourceDigests=%v want %v", got, want)
+	}
+	selected[1].Identity = z
+	got[0] = "mutated"
+	again := sourceDigests(selected)
+	if !sameStrings(again, []string{"sha256:" + b, "sha256:" + z}) {
+		t.Fatalf("sourceDigests after mutation=%v", again)
+	}
+	empty := sourceDigests([]source.SelectedSource{{Identity: "not-a-digest"}})
+	if empty == nil || len(empty) != 0 {
+		t.Fatalf("invalid sourceDigests=%v", empty)
+	}
+}
+
 func writeConfig(t *testing.T, body []byte) (string, string) {
 	t.Helper()
 	root := t.TempDir()
@@ -239,6 +325,30 @@ func hasString(values []string, want string) bool {
 		}
 	}
 	return false
+}
+
+func assertAuditMetadata(t *testing.T, got Result, target Target, requested string, category Category, support SupportStatus, completeness model.Completeness) {
+	t.Helper()
+	if got.Category != category || got.Target != target || got.RequestedTargetVersion != requested || got.SupportStatus != support || got.Completeness != completeness {
+		t.Fatalf("metadata got category=%q target=%q requested=%q support=%q completeness=%q; want category=%q target=%q requested=%q support=%q completeness=%q", got.Category, got.Target, got.RequestedTargetVersion, got.SupportStatus, got.Completeness, category, target, requested, support, completeness)
+	}
+}
+
+func sha256Hex(value string) string {
+	digest := sha256.Sum256([]byte(value))
+	return hex.EncodeToString(digest[:])
+}
+
+func sameStrings(got, want []string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type fakeFS struct {
