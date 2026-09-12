@@ -204,3 +204,5 @@ Changed files: `internal/app/app.go`, `internal/app/app_test.go`, `openspec/chan
 Final authored churn: 230 additions + 31 deletions = 261 authored lines; hard cap 400.
 Rollback: revert WU4-A1 app metadata/tests and this OpenSpec update only; preserve WU3 app support behavior and leave A2/A3/B pending.
 Remaining unchecked implementation rows include WU4-A2, WU4-A3, WU4-B, WU5-WU9; parent lifecycle rows remain deferred.
+## Work Unit 4-A2: Redaction core
+PR 14/21 (`Refs #36`), A2 only; A3/B deferred. Prior recorded RED: duplicate findings/state acceptance failures; remediation rejects unrelated trace evidence and accepts the reachable OpenCode unsupported-version result with fixed finding projection and exact sole trace/provenance evidence equality; GREEN: `go test ./internal/redact -count=25`, `go test -race ./internal/redact -count=1`, `git diff --check`, `gofmt -w internal/redact/report.go internal/redact/report_test.go`, `go vet ./...`, `go test ./... -count=1`, `go build ./...` passed. Rollback: report.go/report_test.go and A2 task/progress edits. Final authored count: 400 additions+deletions (cap 400); no delivery actions.
