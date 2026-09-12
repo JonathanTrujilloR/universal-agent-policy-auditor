@@ -11,10 +11,174 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
 	"github.com/jkelevra/universal-agent-policy-auditor/support"
+	"reflect"
 )
+
+type comparisonFS struct {
+	source.OSReadFS
+	reads []string
+}
+
+func (f *comparisonFS) ReadFile(path string) ([]byte, error) {
+	f.reads = append(f.reads, path)
+	return f.OSReadFS.ReadFile(path)
+}
+
+func TestCompareIntegration(t *testing.T) {
+	good := []byte(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`)
+	for _, variant := range []string{"equivalent", "same", "effect", "malformed-reference", "incomplete-target", "read-failure"} {
+		t.Run(variant, func(t *testing.T) {
+			root, a := writeConfig(t, good)
+			b := filepath.Join(root, "target.json")
+			body := good
+			if variant == "effect" {
+				body = []byte(`{"permission":{"read":"deny","edit":"deny","bash":"ask"}}`)
+			}
+			if variant == "incomplete-target" {
+				body = []byte(`{"permission":{"read":"allow"}}`)
+			}
+			must(t, os.WriteFile(b, body, 0600))
+			if variant == "malformed-reference" {
+				must(t, os.WriteFile(a, []byte(`{`), 0600))
+			}
+			if variant == "same" {
+				b = a
+			}
+			beforeA, beforeB := snapshot(t, a), snapshot(t, b)
+			req := Request{Mode: ModeCompare, Target: TargetOpenCode, Root: root, ReferenceConfig: a, TargetConfig: b, TargetVersion: "1.18.27"}
+			if variant == "read-failure" {
+				req.ReferenceConfig = a + ".missing"
+			}
+			files, calls := &comparisonFS{}, 0
+			result := runWithOptions(req, options{files: files, comparator: func(ref, target compare.Operand) compare.Result {
+				calls++
+				for _, operand := range []compare.Operand{ref, target} {
+					if operand.Canonicalization != "opencode-1.18.27-legacy-permission-scalar" || operand.Coverage != "opencode-1.18.27/read-edit-bash-scalar" {
+						t.Fatalf("operand=%+v", operand)
+					}
+				}
+				if (variant == "malformed-reference" || variant == "read-failure") && (ref.Completeness != model.CompletenessIncomplete || target.Completeness != model.CompletenessComplete) {
+					t.Fatalf("operands=%+v %+v", ref, target)
+				}
+				if variant == "incomplete-target" && (ref.Completeness != model.CompletenessComplete || target.Completeness != model.CompletenessIncomplete) {
+					t.Fatalf("operands=%+v %+v", ref, target)
+				}
+				return compare.Compare(ref, target)
+			}})
+			want, outcome := UnsupportedOrIncomplete, compare.NotComparable
+			if variant == "equivalent" || variant == "same" {
+				want, outcome = CompleteNoFindings, compare.Equivalent
+			}
+			if variant == "read-failure" {
+				want = OperationalFailure
+			}
+			if calls != 1 || result.Category != want || result.Comparison == nil || result.Comparison.Outcome != outcome || result.Comparison.Reasons == nil || result.Comparison.Differences == nil || result.SupportStatus != SupportSupported || (result.Completeness == model.CompletenessComplete) != (want == CompleteNoFindings) {
+				t.Fatalf("calls=%d result=%+v", calls, result)
+			}
+			expectedReads := []string{a, b}
+			expectedSources := []ComparisonSource{{compare.Reference, "sha256:" + sha256Hex(a)}, {compare.Target, "sha256:" + sha256Hex(b)}}
+			if variant == "read-failure" {
+				expectedReads, expectedSources = expectedReads[1:], expectedSources[1:]
+			}
+			if !reflect.DeepEqual(files.reads, expectedReads) || !reflect.DeepEqual(result.ComparisonSources, expectedSources) {
+				t.Fatalf("reads=%v sources=%v", files.reads, result.ComparisonSources)
+			}
+			again := Run(req)
+			if again.Category != result.Category || again.Comparison == nil || again.Comparison.Outcome != result.Comparison.Outcome || !reflect.DeepEqual(again.ComparisonSources, result.ComparisonSources) {
+				t.Fatal("unstable production comparison")
+			}
+			result.ComparisonSources[0].Digest = "changed"
+			if reflect.DeepEqual(again.ComparisonSources, result.ComparisonSources) {
+				t.Fatal("aliased sources")
+			}
+			assertUnchanged(t, a, beforeA.data, beforeA)
+			assertUnchanged(t, b, beforeB.data, beforeB)
+		})
+	}
+}
+
+func TestCompareAdmission(t *testing.T) {
+	req := Request{Mode: ModeCompare, Target: TargetOpenCode, Root: "/root", ReferenceConfig: "/root/a", TargetConfig: "/root/b", TargetVersion: "1.18.27"}
+	for _, tc := range []struct {
+		name   string
+		change func(*Request)
+		want   Category
+		loads  int
+	}{
+		{"unknown", func(r *Request) { r.Target = "unknown" }, InvalidRequest, 0},
+		{"root", func(r *Request) { r.Root = "" }, InvalidRequest, 0},
+		{"relative-root", func(r *Request) { r.Root = "root" }, InvalidRequest, 0},
+		{"reference", func(r *Request) { r.ReferenceConfig = "" }, InvalidRequest, 0},
+		{"target", func(r *Request) { r.TargetConfig = "" }, InvalidRequest, 0},
+		{"relative-reference", func(r *Request) { r.ReferenceConfig = "a" }, InvalidRequest, 0},
+		{"relative-target", func(r *Request) { r.TargetConfig = "b" }, InvalidRequest, 0},
+		{"outside-reference", func(r *Request) { r.ReferenceConfig = "/root/../a" }, InvalidRequest, 0},
+		{"outside-target", func(r *Request) { r.TargetConfig = "/else/b" }, InvalidRequest, 0},
+		{"explicit", func(r *Request) { r.ExplicitConfig = "/root/a" }, InvalidRequest, 0},
+		{"missing-version", func(r *Request) { r.TargetVersion = "" }, UnsupportedOrIncomplete, 0},
+		{"nearby-version", func(r *Request) { r.TargetVersion = "1.18.28" }, UnsupportedOrIncomplete, 1},
+		{"claude", func(r *Request) { r.Target = TargetClaudeCode }, UnsupportedOrIncomplete, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := req
+			tc.change(&r)
+			files, loads := &fakeFS{}, 0
+			got := runWithOptions(r, options{files: files, loadSupport: func() (support.Matrix, error) { loads++; return support.LoadCheckedIn() }, comparator: func(compare.Operand, compare.Operand) compare.Result {
+				t.Fatal("unexpected comparison")
+				return compare.Result{}
+			}})
+			if got.Category != tc.want || files.calls != 0 || loads != tc.loads || got.Comparison != nil {
+				t.Fatalf("result=%+v reads=%d loads=%d", got, files.calls, loads)
+			}
+		})
+	}
+	for _, loaderFailure := range []bool{false, true} {
+		deps := options{files: (*fakeFS)(nil), comparator: func(compare.Operand, compare.Operand) compare.Result {
+			t.Fatal("unexpected comparison")
+			return compare.Result{}
+		}}
+		if loaderFailure {
+			deps.loadSupport = func() (support.Matrix, error) { return support.Matrix{}, errors.New("private path") }
+		}
+		if got := runWithOptions(req, deps); got.Category != OperationalFailure {
+			t.Fatalf("result=%+v", got)
+		}
+	}
+	files := &fakeFS{root: req.Root, path: req.ReferenceConfig, readErr: true}
+	calls := 0
+	got := runWithOptions(req, options{files: files, comparator: func(a, b compare.Operand) compare.Result { calls++; return compare.Compare(a, b) }})
+	if got.Category != OperationalFailure || calls != 1 {
+		t.Fatalf("result=%+v calls=%d", got, calls)
+	}
+}
+
+func TestCompareOutcomesAndDefensiveSlices(t *testing.T) {
+	root, path := writeConfig(t, []byte(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`))
+	for _, outcome := range []compare.Outcome{compare.TargetOnly, compare.Ambiguous, compare.NotComparable, "unknown"} {
+		injected := compare.Result{Outcome: outcome, Reasons: []compare.Reason{{Side: compare.Target, Code: compare.EffectDiffers}}, Differences: []compare.Difference{{Outcome: outcome}}}
+		calls := 0
+		got := runWithOptions(Request{Mode: ModeCompare, Target: TargetOpenCode, Root: root, ReferenceConfig: path, TargetConfig: path, TargetVersion: "1.18.27"}, options{comparator: func(compare.Operand, compare.Operand) compare.Result { calls++; return injected }})
+		if calls != 1 || ExitCode(got.Category) != 2 || got.Completeness != model.CompletenessIncomplete {
+			t.Fatalf("result=%+v calls=%d", got, calls)
+		}
+		got.Comparison.Reasons[0].Side = compare.Reference
+		got.Comparison.Differences[0].Outcome = compare.Equivalent
+		if injected.Reasons[0].Side != compare.Target || injected.Differences[0].Outcome != outcome {
+			t.Fatal("comparator output aliased")
+		}
+	}
+}
+
+func TestCompareAPI(t *testing.T) {
+	result := Run(Request{Mode: ModeCompare, ReferenceConfig: "/root/a", TargetConfig: "/root/b"})
+	if result.Category != InvalidRequest || result.Comparison != nil || len(result.ComparisonSources) != 0 {
+		t.Fatalf("result=%+v", result)
+	}
+}
 
 func TestExitCategoryCodesAreStableAndFailClosed(t *testing.T) {
 	for _, tt := range []struct {

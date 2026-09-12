@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/adapter/opencode"
+	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
 	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
 	"github.com/jkelevra/universal-agent-policy-auditor/support"
@@ -24,6 +25,7 @@ type SupportStatus string
 const (
 	ModeVersion Mode = "version"
 	ModeAudit   Mode = "audit"
+	ModeCompare Mode = "compare"
 
 	TargetOpenCode   Target = "opencode"
 	TargetClaudeCode Target = "claudecode"
@@ -42,15 +44,24 @@ const (
 type BuildInfo struct{ Version string }
 
 type Request struct {
-	Mode           Mode
-	Target         Target
-	Root           string
-	ExplicitConfig string
-	TargetVersion  string
-	Build          BuildInfo
+	Mode            Mode
+	Target          Target
+	Root            string
+	ExplicitConfig  string
+	ReferenceConfig string
+	TargetConfig    string
+	TargetVersion   string
+	Build           BuildInfo
+}
+
+type ComparisonSource struct {
+	Side   compare.Side
+	Digest string
 }
 
 type Result struct {
+	Comparison             *compare.Result
+	ComparisonSources      []ComparisonSource
 	Category               Category
 	Message                string
 	Build                  BuildInfo
@@ -65,6 +76,7 @@ type Result struct {
 }
 
 type options struct {
+	comparator  func(compare.Operand, compare.Operand) compare.Result
 	files       source.ReadFS
 	loadSupport func() (support.Matrix, error)
 	lookupEnv   func(string) (string, bool)
@@ -79,9 +91,85 @@ func runWithOptions(req Request, options options) Result {
 		return Result{Category: CompleteNoFindings, Message: "version", Build: normalize(req.Build), Completeness: model.CompletenessComplete}
 	case ModeAudit:
 		return audit(req, deps)
+	case ModeCompare:
+		return compareConfigs(req, deps)
 	default:
 		return Result{Category: InvalidRequest, Message: "invalid request", Build: normalize(req.Build)}
 	}
+}
+
+const (
+	comparisonCanonicalization = "opencode-1.18.27-legacy-permission-scalar"
+	comparisonCoverage         = "opencode-1.18.27/read-edit-bash-scalar"
+)
+
+func compareConfigs(req Request, deps options) Result {
+	result := auditResult(req, normalize(req.Build), InvalidRequest, "invalid comparison request", SupportUnresolved)
+	if req.Target != TargetOpenCode && req.Target != TargetClaudeCode || req.Root == "" || req.ReferenceConfig == "" || req.TargetConfig == "" || req.ExplicitConfig != "" || !lexicallyWithin(req.Root, req.ReferenceConfig) || !lexicallyWithin(req.Root, req.TargetConfig) {
+		return result
+	}
+	result.Category, result.Message = UnsupportedOrIncomplete, "comparison support evidence is incomplete"
+	if req.Target == TargetClaudeCode {
+		result.SupportStatus = SupportUnsupported
+		return result
+	}
+	if req.TargetVersion == "" {
+		return result
+	}
+	matrix, err := deps.loadSupport()
+	if err != nil {
+		result.Category, result.Message = OperationalFailure, "support metadata unavailable"
+		return result
+	}
+	validation := support.Validate(matrix, support.Entry{Target: "opencode", Version: req.TargetVersion, Construct: "permission"})
+	if req.TargetVersion != "1.18.27" || validation.Completeness != model.CompletenessComplete {
+		result.SupportStatus = SupportUnsupported
+		return result
+	}
+	result.SupportStatus = SupportSupported
+	files := reflect.ValueOf(deps.files)
+	switch files.Kind() {
+	case reflect.Pointer, reflect.Map, reflect.Slice, reflect.Func, reflect.Chan, reflect.Interface:
+		if files.IsNil() {
+			result.Category, result.Message = OperationalFailure, "source dependency unavailable"
+			return result
+		}
+	}
+	operands := [2]compare.Operand{}
+	operational := false
+	for i, path := range []string{req.ReferenceConfig, req.TargetConfig} {
+		side := []compare.Side{compare.Reference, compare.Target}[i]
+		operand := compare.Operand{Canonicalization: comparisonCanonicalization, Coverage: comparisonCoverage, Completeness: model.CompletenessIncomplete}
+		plan := opencode.DiscoveryPlan(req.Root, []string{path})
+		selection := source.Execute(context.Background(), plan, deps.files, source.CaptureEnv(plan.EnvKeys, deps.lookupEnv))
+		if digests := sourceDigests(selection.Selected); len(digests) != 0 {
+			result.ComparisonSources = append(result.ComparisonSources, ComparisonSource{Side: side, Digest: digests[0]})
+		}
+		result.Findings = append(result.Findings, sourceFindings(selection.Findings)...)
+		for _, finding := range selection.Findings {
+			if finding.Code == "unreadable" || finding.Code == "invalid-root" {
+				operational = true
+			}
+		}
+		report := opencode.ResolveWithOptions(selection.Selected, opencode.Options{Version: req.TargetVersion, Support: matrix})
+		operand.Permissions = append([]model.Permission(nil), report.Permissions...)
+		result.Findings = append(result.Findings, report.Findings...)
+		if len(selection.Selected) == 1 && len(selection.Findings) == 0 {
+			operand.Completeness = report.Completeness
+		}
+		operands[i] = operand
+	}
+	comparison := deps.comparator(operands[0], operands[1])
+	comparison.Reasons = append([]compare.Reason{}, comparison.Reasons...)
+	comparison.Differences = append([]compare.Difference{}, comparison.Differences...)
+	result.Comparison = &comparison
+	result.Message = "comparison is unsupported or incomplete"
+	if operational {
+		result.Category, result.Message = OperationalFailure, "comparison source unavailable"
+	} else if comparison.Outcome == compare.Equivalent && operands[0].Completeness == model.CompletenessComplete && operands[1].Completeness == model.CompletenessComplete {
+		result.Category, result.Message, result.Completeness = CompleteNoFindings, "", model.CompletenessComplete
+	}
+	return result
 }
 
 func audit(req Request, options options) Result {
@@ -142,6 +230,7 @@ func audit(req Request, options options) Result {
 
 func auditResult(req Request, build BuildInfo, category Category, message string, status SupportStatus) Result {
 	return Result{
+		ComparisonSources:      []ComparisonSource{},
 		Category:               category,
 		Message:                message,
 		Build:                  build,
@@ -199,6 +288,9 @@ func sourceFindings(findings []source.Finding) []model.Finding {
 }
 
 func normalizeOptions(options options) options {
+	if options.comparator == nil {
+		options.comparator = compare.Compare
+	}
 	if options.files == nil {
 		options.files = source.OSReadFS{}
 	}
