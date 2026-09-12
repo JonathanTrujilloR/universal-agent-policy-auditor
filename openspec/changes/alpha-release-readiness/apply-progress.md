@@ -270,3 +270,13 @@ TRIANGULATE: metadata, completeness, identity, trace, unresolved/unsupported eff
 REFACTOR: pure model-only dependency, closed reason codes, sorted outputs, and no broader/narrower, app, renderer, CLI, or Claude claims.
 Verification: `go test ./internal/compare -count=25`; `go test ./... -count=25`; `go test -race ./...`; `go vet ./...`; `go test ./...`; `go build ./...`; `git diff --check` pass.
 Rollback: revert `internal/compare/**` and this tracking only.
+
+## 2026-09-13 — WU7-A #45 comparison app integration (PR 20/27)
+
+Issue/chain: approved issue `#45`; user approved five A-E slices and a 27-PR chain. A is app-only and uses an intermediate issue reference.
+RED: focused app comparison test failed before `ModeCompare` and comparison request/result metadata existed.
+GREEN: two explicit OpenCode 1.18.27 configs are independently admitted and resolved, then delegated exactly once to the pure #19 core; only equivalent maps to 0, all non-equivalence maps to 2, and exit 1 remains reserved.
+TRIANGULATE: same/different paths, effect/malformed/incomplete/read failures, syntax/support gates before target I/O, typed-nil dependencies, exact call count, safe side digests, defensive copies, and target nonmutation pass.
+REFACTOR: audit behavior remains unchanged; focused tests pass 25 times and under race; formatting, vet, full tests, build, and diff checks pass.
+Acceptance: no adapter/support/source/redaction/render/CLI changes; no Claude, cross-client, broader/narrower, lossy, runtime, or output claims.
+Rollback: revert app comparison fields/path/tests and this tracking only; retain the pure #19 core.

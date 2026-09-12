@@ -7,7 +7,7 @@
 | Estimated changed lines | 2,340-3,340+ authored lines total: 940 current planning lines plus 1,400-2,400 implementation lines and this correction |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B1 parser/conformance cleanup → PR 11 WU3-B2 production row activation → PR 12 WU3-C app support wiring → PR 13 WU4-A1 app metadata → PR 14 WU4-A2 redaction core → PR 15 WU4-A3 privacy hardening/fuzz/docs → PR 16 WU4-B versioned JSON → PR 17 WU5-A human renderer → PR 18 WU5-B CLI format selection → PR 19 #19 comparison core → PR 20 CI/release build → PR 21 release docs/prerelease → PR 22 post-release pilot pack; comparison integration requires a separate approved issue and reforecast before PR 20 |
+| Suggested split | Planning PRs A-D → PR 5 public identity → PR 6 CLI/app shell → PRs 7-12 WU3 → PRs 13-16 WU4 → PRs 17-18 WU5 → PR 19 #19 comparison core → PRs 20-24 #45 comparison app/redaction/JSON/text/CLI → PR 25 CI/release build → PR 26 release docs/prerelease → PR 27 post-release pilot pack |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 19 of 22, pure #19 comparison core. Planning PRs A-D and WU1-WU5 are delivered; issues `#36` and `#41` are closed. Approved issue `#19` governs only this core; comparison integration requires a separate approved issue and chain reforecast. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 20 of 27, #45 comparison integration A (application only). Planning PRs A-D, WU1-WU5, and the pure #19 core are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A-E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -127,9 +127,22 @@ Issue gate: approved issue `#19` governs only a pure canonical permission compar
 - [x] Record acceptance evidence without claiming broader/narrower, runtime enforcement, Claude support, or CLI availability. <!-- sdd-owner: implementation -->
 - [x] Record rollback boundary: revert `internal/compare/**` and this tracking only. <!-- sdd-owner: implementation -->
 
-Comparison integration remains required before release work, but it needs a separate approved issue and a human-approved chain reforecast after this API lands; do not start PR 20 from the provisional row above.
+## Work Unit 7: #45 Safe OpenCode Comparison Integration
 
-## Work Unit 7: CI, Release Build, Checksums, and Smoke
+Issue gate: approved issue `#45` governs five bounded slices and expands the chain to 27 PRs. The first alpha compares only two explicit OpenCode 1.18.27 configs; exit 1 remains reserved, no-format output remains category-only, and JSON uses `auditor-comparison-report/v1alpha1`. Cross-client comparison, Claude support, broader/narrower, lossy inference, and runtime enforcement remain excluded.
+
+- [x] A (PR 20/27): Integrate two independently admitted operands in `internal/app`, delegate exactly once to #19, map only equivalent to success, and preserve audit behavior. <!-- sdd-owner: implementation -->
+- [ ] B (PR 21/27): Add opaque comparison redaction with closed fields/reasons, defensive copies, privacy canaries, and fuzzing. <!-- sdd-owner: implementation -->
+- [ ] C (PR 22/27): Add deterministic atomic JSON for `auditor-comparison-report/v1alpha1`; audit JSON remains unchanged. <!-- sdd-owner: implementation -->
+- [ ] D (PR 23/27): Add deterministic atomic blockers-first human comparison text. <!-- sdd-owner: implementation -->
+- [ ] E (PR 24/27): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
+- [x] RED A: Focused app tests failed before `ModeCompare` and comparison request/result metadata existed. <!-- sdd-owner: implementation -->
+- [x] GREEN A: Exact supported operands are independently selected/resolved; equivalent maps to 0 and every non-equivalent core result maps to 2. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE A: Cover same/different paths, semantic/incomplete/operational failures, admission-before-I/O, exact one comparator call, digests, nonmutation, defensive copies, and reserved exit 1. <!-- sdd-owner: implementation -->
+- [x] REFACTOR A: App-only changes pass repeated/race focused tests plus formatting, vet, full tests, and build. <!-- sdd-owner: implementation -->
+- [ ] Record aggregate A-E acceptance and rollback evidence; reverting integration must retain the pure #19 core. <!-- sdd-owner: implementation -->
+
+## Work Unit 8: CI, Release Build, Checksums, and Smoke
 
 Issue gate: blocked until a dedicated CI/release-build Work Unit issue is approved. Forecast: 220-380 authored lines. File surfaces: `.github/workflows/**`, `scripts/**` or `tools/**` release helpers, `cmd/auditor` build metadata integration, release evidence docs under `docs/` if needed.
 
@@ -140,7 +153,7 @@ Issue gate: blocked until a dedicated CI/release-build Work Unit issue is approv
 - [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
 - [ ] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
 
-## Work Unit 8: Release Docs and Prerelease Preparation
+## Work Unit 9: Release Docs and Prerelease Preparation
 
 Issue gate: blocked until a dedicated release-docs Work Unit issue is approved and prior evidence Work Units have landed. Forecast: 180-320 authored lines. File surfaces: `README.md`, `docs/**`, `CHANGELOG.md` or release notes file discovered during apply, support matrix documentation.
 
@@ -151,7 +164,7 @@ Issue gate: blocked until a dedicated release-docs Work Unit issue is approved a
 - [ ] Record acceptance evidence that release remains blocked until exact OpenCode evidence and Linux amd64 smoke evidence exist; do not invent a version. <!-- sdd-owner: implementation -->
 - [ ] Record rollback boundary: revert release docs/release notes/support docs only. <!-- sdd-owner: implementation -->
 
-## Work Unit 9: Post-Release Pilot Pack
+## Work Unit 10: Post-Release Pilot Pack
 
 Issue gate: blocked until a dedicated pilot-pack Work Unit issue is approved; pilot execution starts only after the alpha release exists. Forecast: 80-180 authored lines. File surfaces: `.github/ISSUE_TEMPLATE/**`, `.github/DISCUSSION_TEMPLATE/**` if present, `docs/pilot/**` or equivalent docs discovered during apply.
 
@@ -164,8 +177,8 @@ Issue gate: blocked until a dedicated pilot-pack Work Unit issue is approved; pi
 
 ## Human-Controlled Delivery Gates
 
-- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Issue `#19` is approved for comparison core, issue `#20` is approved for public identity, issue `#21` is approved for planning only, and issue `#29` is approved for the five WU3 slices; later Work Units still require their own approvals. <!-- sdd-owner: parent -->
-- [x] Approved the corrected 17-PR total chain forecast: 4 planning PRs, public identity, CLI/app shell, five WU3 implementation slices, and remaining implementation PRs under `ask-on-risk` using `stacked-to-main`; no `size:exception` is authorized. <!-- sdd-owner: parent -->
+- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Completed issues govern delivered WUs; approved issue `#45` governs only comparison integration A-E, while later release Work Units still require their own approvals. <!-- sdd-owner: parent -->
+- [x] Approved the corrected 27-PR total chain forecast through five #45 integration slices under `ask-on-risk` using `stacked-to-main`; no `size:exception` is authorized. <!-- sdd-owner: parent -->
 - [x] Approved issue `#21` as the coherent planning authority for Planning PRs A-D; issue `#20` remains limited to public identity implementation. <!-- sdd-owner: parent -->
 - [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
 - [ ] Confirm the exact OpenCode version/evidence boundary before Work Unit 3 claims support. <!-- sdd-owner: parent -->
