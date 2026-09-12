@@ -7,7 +7,7 @@
 | Estimated changed lines | 2,340-3,340+ authored lines total: 940 current planning lines plus 1,400-2,400 implementation lines and this correction |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B1 parser/conformance cleanup → PR 11 WU3-B2 production row activation → PR 12 WU3-C app support wiring → PR 13 WU4-A1 app metadata → PR 14 WU4-A2 redaction core → PR 15 WU4-A3 privacy hardening/fuzz/docs → PR 16 WU4-B versioned JSON → PR 17 human renderer → PR 18 #19 integration → PR 19 CI/release build → PR 20 release docs/prerelease → PR 21 post-release pilot pack |
+| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B1 parser/conformance cleanup → PR 11 WU3-B2 production row activation → PR 12 WU3-C app support wiring → PR 13 WU4-A1 app metadata → PR 14 WU4-A2 redaction core → PR 15 WU4-A3 privacy hardening/fuzz/docs → PR 16 WU4-B versioned JSON → PR 17 WU5-A human renderer → PR 18 WU5-B CLI format selection → PR 19 #19 integration → PR 20 CI/release build → PR 21 release docs/prerelease → PR 22 post-release pilot pack |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -16,11 +16,11 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 16 of 21, WU4-B versioned JSON. Planning PRs A-D and WU3 are delivered; WU4-A1 PR `#37`, A2 PR `#38`, and A3 PR `#39` are merged. Approved issue `#36` remains open until parent final delivery uses `Closes #36`. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 17 of 22, WU5-A human renderer, intermediate `Refs #41`. Planning PRs A-D, WU3, and WU4 are delivered; WU4-A1 PR `#37`, A2 PR `#38`, A3 PR `#39`, and B PR `#40` are merged; issue `#36` is closed. Approved issue `#41` governs WU5-A/B; B CLI integration remains pending. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
-- Do not start implementation apply for any Work Unit until the planning-artifact PR path is approved and delivered, and exactly one coherent Work Unit issue is approved with `status:approved` and exactly one `type:*` label. Issue `#19` governs comparison core, issue `#20` governs public identity, issue `#21` governs planning only, issue `#29` governed WU3, and issue `#36` governs WU4 output/redaction/JSON slices. <!-- sdd-owner: implementation -->
+- Do not start implementation apply for any Work Unit until the planning-artifact PR path is approved and delivered, and exactly one coherent Work Unit issue is approved with `status:approved` and exactly one `type:*` label. Issue `#19` governs comparison core, issue `#20` governs public identity, issue `#21` governs planning only, issue `#29` governed WU3, and issue `#36` governed WU4 output/redaction/JSON slices, and approved issue `#41` governs WU5 human renderer/CLI slices. <!-- sdd-owner: implementation -->
 - Keep every Work Unit independently reviewable, rollbackable, and below the 400 authored changed-line budget; split before exceeding the budget instead of using an oversized PR unless a maintainer explicitly grants `size:exception`. <!-- sdd-owner: implementation -->
 - For runtime/code Work Units, follow strict TDD in this order: RED failing focused test, GREEN minimal implementation, TRIANGULATE additional behavior/edge case, REFACTOR with focused and full verification. <!-- sdd-owner: implementation -->
 - Record exact focused commands and full commands for each Work Unit; default full verification is `gofmt -l .`, `go vet ./...`, `go test ./...`, and `go build ./...` when relevant. <!-- sdd-owner: implementation -->
@@ -97,12 +97,17 @@ Issue gate: approved issue `#36` (`status:approved`, output/redaction/JSON scope
 - [x] WU4-A2 redaction core: Add `internal/redact` safe-report conversion over app results, excluding raw secrets/config values/private paths/raw target data and accepting only closed metadata/provenance digests. <!-- sdd-owner: implementation -->
 - [x] WU4-A3 privacy hardening/fuzz/docs: Add focused privacy edge cases, fuzz/property coverage where practical, and docs/checks proving no secret, credential, username, hostname, absolute private path, raw value, token, or unredacted local context is emitted. <!-- sdd-owner: implementation -->
 - [x] WU4-B versioned JSON: Add deterministic `auditor-report/v1alpha1` JSON renderer over redacted DTOs with schema version, tool version, target/version/support status, completeness, permissions, findings, provenance digests, exit category, and limitations; no differences or CLI JSON activation here. <!-- sdd-owner: implementation -->
-- [x] Record WU4-A2/A3/B acceptance evidence: merged redaction/privacy tests plus B exact sanitized success/unsupported/incomplete goldens, empty arrays, exits, invalid-report rejection, escaping policy and 100 byte-identical repeats. All four WU4 slices have implementation evidence; WU5+ remain pending. <!-- sdd-owner: implementation -->
+- [x] Record WU4-A2/A3/B acceptance evidence: merged redaction/privacy tests plus B exact sanitized success/unsupported/incomplete goldens, empty arrays, exits, invalid-report rejection, escaping policy and 100 byte-identical repeats. All four WU4 slices are merged, including B PR `#40`; issue `#36` is closed. WU5 is tracked below. <!-- sdd-owner: implementation -->
 - [x] Record WU4 rollback boundaries per slice: A1 reverts only app metadata/tests; A2/A3 revert redaction/privacy files; B reverts JSON renderer/schema files without changing adapter/model semantics. <!-- sdd-owner: implementation -->
 
 ## Work Unit 5: Human Renderer
 
-Issue gate: blocked until a dedicated human-renderer Work Unit issue is approved. Forecast: 120-240 authored lines. File surfaces: `internal/render/text/**`, CLI renderer selection tests including JSON activation, and docs snippets paired with behavior. This Work Unit remains separate from Work Unit 4 so the approved 21-PR chain has bounded implementation PR slices.
+Issue gate: approved issue `#41`, split into A renderer and B CLI activation in the 22-PR chain. WU5-A forecast: 300-390 authored lines, hard cap 400. A surfaces: `internal/render/text/report.go`, `internal/render/text/report_test.go`, `docs/report-safety.md`, and these two tracking artifacts. B owns CLI selection/tests including JSON activation; no app/model/redact/JSON/CLI changes in A.
+
+- [x] WU5-A (PR 17/22, `Refs #41`): Deterministic valid-report-only plain text, complete bytes or fixed generic error, exact goldens, exits 0/2/3/4, reserved exit 1 rejection, no color/ambient inputs, no canary, 100 independent repeats, formatting checks and bounded rollback; commands/count in apply-progress. <!-- sdd-owner: implementation -->
+- [ ] WU5-B (PR 18/22): Wire CLI text/JSON format selection and `--no-color` behavior with focused CLI tests and docs; retain category/exit semantics and close issue #41 only at final delivery. <!-- sdd-owner: implementation -->
+
+The aggregate WU5 rows below remain pending until B integration evidence exists; A does not add differences/comparison semantics.
 
 - [ ] RED: Add failing tests for concise deterministic text output, uncertainty first, no color dependency with `--no-color`, limitations visibility, and no raw sensitive values; focused command: `go test ./internal/render/text ./cmd/auditor`. <!-- sdd-owner: implementation -->
 - [ ] GREEN: Implement text renderer over redacted safe report only and wire CLI format selection without changing app semantics. <!-- sdd-owner: implementation -->
