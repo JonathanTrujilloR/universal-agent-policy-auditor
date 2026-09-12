@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 13 of 21, WU4-A1 app metadata. Planning PRs A-D are merged, approved issue `#21` is closed, WU3 slices through PR 12 are delivered, and approved issue `#36` governs the four output/redaction/JSON slices. Chain implication: use `stacked-to-main`; PR 13 is an intermediate slice and uses only `Refs #36` at parent delivery, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 14 of 21, WU4-A2 redaction core. Planning PRs A-D are merged, approved issue `#21` is closed, WU3 slices through PR 12 and WU4-A1 through PR 13 are delivered, and approved issue `#36` governs the four output/redaction/JSON slices. Chain implication: use `stacked-to-main`; PR 14 is an intermediate slice and uses only `Refs #36` at parent delivery, each implementation slice targets `main`, stays under 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -94,7 +94,7 @@ The broad WU3 completion rows below are checked from aggregate A1/A2/A3/B1/B2/C 
 Issue gate: approved issue `#36` (`status:approved`, output/redaction/JSON scope) defines four bounded slices. Forecast is enforced per slice under 400 authored changed lines. File surfaces are slice-specific: WU4-A1 only `internal/app/**`; WU4-A2/A3 later `internal/redact/**` and privacy tests/docs; WU4-B later `internal/render/json/**`. CLI JSON activation remains WU5 and this Work Unit MUST NOT absorb the human renderer or use `size:exception`.
 
 - [x] WU4-A1 app metadata: Add closed internal audit metadata only: `SupportStatus`, result target/requested-version fields, completeness/support status on every audit branch, stable limitations, and source identity digests from `source.SelectedSource.Identity`; keep default stdout/stderr/exits byte-compatible. <!-- sdd-owner: implementation -->
-- [ ] WU4-A2 redaction core: Add `internal/redact` safe-report conversion over app results, excluding raw secrets/config values/private paths/raw target data and accepting only closed metadata/provenance digests. <!-- sdd-owner: implementation -->
+- [x] WU4-A2 redaction core: Add `internal/redact` safe-report conversion over app results, excluding raw secrets/config values/private paths/raw target data and accepting only closed metadata/provenance digests. <!-- sdd-owner: implementation -->
 - [ ] WU4-A3 privacy hardening/fuzz/docs: Add focused privacy edge cases, fuzz/property coverage where practical, and docs/checks proving no secret, credential, username, hostname, absolute private path, raw value, token, or unredacted local context is emitted. <!-- sdd-owner: implementation -->
 - [ ] WU4-B versioned JSON: Add deterministic `auditor-report/v1alpha1` JSON renderer over redacted DTOs with schema version, tool version, target/version/support status, completeness, permissions or differences, findings, provenance digests, exit category, and limitations; do not wire CLI JSON activation here. <!-- sdd-owner: implementation -->
 - [ ] Record WU4-A2/A3/B acceptance evidence with sanitized fixture output and deterministic repeated-run JSON proof before marking those slices complete. <!-- sdd-owner: implementation -->
