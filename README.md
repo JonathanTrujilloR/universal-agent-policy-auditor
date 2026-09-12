@@ -1,6 +1,6 @@
 # Universal Agent Policy Auditor
 
-Universal Agent Policy Auditor is a **pre-alpha**, local-first Go project for auditing AI coding-agent policy semantics. It is not yet an installable release. A source-built CLI can statically evaluate one explicit OpenCode 1.18.27 legacy scalar permission config and returns category/exit output only; no public alpha binary is available yet.
+Universal Agent Policy Auditor is a **pre-alpha**, local-first Go project for auditing AI coding-agent policy semantics. It is not yet an installable release. A source-built CLI can statically evaluate one explicit OpenCode 1.18.27 legacy scalar permission config and defaults to category/exit output, with explicit safe text or JSON reports; no public alpha binary is available yet.
 
 ## Current status
 
@@ -12,7 +12,7 @@ Universal Agent Policy Auditor is a **pre-alpha**, local-first Go project for au
 | Claude Code | Unsupported while issues [#11](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/11) and [#13](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/13) remain blocked. |
 | Comparison | Planned fail-closed semantics are tracked in [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19); no complete OpenCode-versus-Claude support is claimed. |
 | Runtime behavior | Static modeled configuration semantics only; not runtime policy enforcement, compliance, security, or unsafe-behavior prevention. |
-| Output | Category and exit code only; text and JSON report renderers are later slices. |
+| Output | Category-only by default; audit-only `--format text` or `--format json` selects safe reports. |
 | Distribution | No package-manager install, supported binary download, supported platform, signing, provenance, or release artifact is available yet. |
 | Adoption | No adoption, usage, pilot success, or ecosystem acceptance claim is made. |
 | License | Apache License 2.0. See [LICENSE](LICENSE). |
@@ -46,10 +46,35 @@ cmd/auditor (source-built CLI transport)
   -> support (evidence matrix and fixtures)
   -> internal/model (canonical semantic facts)
   -> internal/compare (only through #19 when available)
-  -> internal/redact + internal/render (planned safe output)
+  -> internal/redact + internal/render (explicit safe audit output)
 ```
 
 The current source is intentionally conservative: target support must pass through evidence gates, and unsupported or incomplete input must not become a successful audit.
+
+## Source-built audit output
+
+```text
+auditor audit <target> --root <abs> --config <abs> [--opencode-version <v>] [--format text|json] [--no-color]
+```
+
+Targets are `opencode` and `claudecode` (still unsupported). Flags must appear in
+exactly this order, without duplicates. Paths must be absolute and the config
+must be within the root. Missing OpenCode version evidence remains incomplete.
+
+```bash
+go run ./cmd/auditor audit opencode --root /workspace/project --config /workspace/project/opencode.json --opencode-version 1.18.27 --format text --no-color
+go run ./cmd/auditor audit opencode --root /workspace/project --config /workspace/project/opencode.json --opencode-version 1.18.27 --format json
+```
+
+`--no-color` is a no-op allowed only after `--format text`; text never emits ANSI.
+No-format audit/version results remain byte-compatible, including empty version evidence.
+Help intentionally advertises the new audit flags. Formats are audit-only;
+`version` JSON is deferred, and help/version reject format flags. Safely rendered
+reports go to stdout, including exits 3/4; malformed syntax goes to stderr/3.
+Redaction/render failure emits only `operational_failure` to stderr/4; output-write
+failure returns 4 without a diagnostic payload. Exit 1 is reserved, not emitted.
+These are pre-release source commands, not an available binary release. See
+[report safety](docs/report-safety.md) for retained data and limitations.
 
 ## Verification for contributors
 
@@ -72,7 +97,7 @@ For documentation-only changes, also perform structural readback: confirm the RE
 | Public identity and Apache-2.0 baseline | Done. |
 | CLI/app shell | Done for category/exit output. |
 | OpenCode evidence gate | Done only for OpenCode `1.18.27` legacy scalar `permission` with explicit `read`, `edit`, and `bash`. |
-| Redaction and renderers | Planned; output is currently category/exit only. |
+| Redaction and renderers | Wired for explicit audit formats; default category/exit output is unchanged. |
 | Comparison integration | Planned only through approved fail-closed work in [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19). |
 | Release build and checksums | Planned; required before any Linux amd64 artifact support claim. |
 | Post-release pilot | Future feedback collection only; not adoption evidence. |
