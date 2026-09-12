@@ -7,7 +7,7 @@
 | Estimated changed lines | 2,340-3,340+ authored lines total: 940 current planning lines plus 1,400-2,400 implementation lines and this correction |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B1 parser/conformance cleanup → PR 11 WU3-B2 production row activation → PR 12 WU3-C app support wiring → PR 13 WU4-A1 app metadata → PR 14 WU4-A2 redaction core → PR 15 WU4-A3 privacy hardening/fuzz/docs → PR 16 WU4-B versioned JSON → PR 17 WU5-A human renderer → PR 18 WU5-B CLI format selection → PR 19 #19 integration → PR 20 CI/release build → PR 21 release docs/prerelease → PR 22 post-release pilot pack |
+| Suggested split | Planning PR A config/exploration/preproposal/proposal → Planning PR B alpha-release spec → Planning PR C design → Planning PR D corrected tasks → PR 5 public identity → PR 6 CLI/app shell → PR 7 WU3-A1 strict JSON/envelope → PR 8 WU3-A2 metadata integrity → PR 9 WU3-A3 pinned evidence → PR 10 WU3-B1 parser/conformance cleanup → PR 11 WU3-B2 production row activation → PR 12 WU3-C app support wiring → PR 13 WU4-A1 app metadata → PR 14 WU4-A2 redaction core → PR 15 WU4-A3 privacy hardening/fuzz/docs → PR 16 WU4-B versioned JSON → PR 17 WU5-A human renderer → PR 18 WU5-B CLI format selection → PR 19 #19 comparison core → PR 20 CI/release build → PR 21 release docs/prerelease → PR 22 post-release pilot pack; comparison integration requires a separate approved issue and reforecast before PR 20 |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 18 of 22, final WU5-B CLI format activation. Planning PRs A-D, WU3, WU4, and WU5-A PR `#42` are delivered; issue `#36` is closed. Approved issue `#41` governs WU5-A/B; only final B delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 19 of 22, pure #19 comparison core. Planning PRs A-D and WU1-WU5 are delivered; issues `#36` and `#41` are closed. Approved issue `#19` governs only this core; comparison integration requires a separate approved issue and chain reforecast. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -116,16 +116,18 @@ The aggregate WU5 evidence below covers both bounded slices; neither adds compar
 - [x] Record acceptance evidence in exact text/JSON outputs, README/report-safety readback, repeated/race tests, and apply-progress. <!-- sdd-owner: implementation -->
 - [x] Record rollback boundary: A removes text renderer/docs; B removes CLI format wiring/docs while retaining redaction and JSON. <!-- sdd-owner: implementation -->
 
-## Work Unit 6: #19 Comparison Integration
+## Work Unit 6: #19 Comparison Core
 
-Issue gate: issue `#19` is approved for comparison core; this Work Unit may proceed only after #19 implementation exists and must not reimplement or redefine it. Forecast: 180-330 authored lines. File surfaces: `internal/app/**`, `cmd/auditor/**`, `internal/render/**`, imports/calls to the #19 package discovered during apply, integration tests.
+Issue gate: approved issue `#19` governs only a pure canonical permission comparison core. Forecast: 330-400 authored lines. File surfaces: `internal/compare/**` plus this task and apply-progress evidence. App, adapters, support, sources, redaction, renderers, CLI, broader/narrower inference, and Claude support remain excluded.
 
-- [ ] RED: Add failing tests that `compare` delegates to the #19 package when available and returns `unsupported_or_incomplete` for unavailable, ambiguous, lossy, unsupported, or not-comparable states; focused command: `go test ./internal/app ./cmd/auditor`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Wire app/CLI/rendering to #19-defined operands and results only, with no new comparison algorithms, equivalence rules, or Claude support claims. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Cover docs/output wording so fail-closed comparison does not imply complete OpenCode-versus-Claude support while Claude remains unsupported. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Keep #19 integration removable and separate from core #19 package implementation; full command: `gofmt -l . && go vet ./... && go test ./...`. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence linking to #19 behavior and showing unavailable comparison maps to visible non-success. <!-- sdd-owner: implementation -->
-- [ ] Record rollback boundary: revert comparison wiring in app/CLI/renderers only; keep #19 core intact. <!-- sdd-owner: implementation -->
+- [x] RED: Focused tests fail before the comparison API exists. <!-- sdd-owner: implementation -->
+- [x] GREEN: Compare complete same-profile, same-coverage canonical facts as `equivalent`, directional `target-only`, `ambiguous`, or `not-comparable`; `OnlyIn` disambiguates reference and target. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Cover incompatible/incomplete operands, invalid identities/traces/effects, exact duplicates, conflicting duplicates, semantic mismatches, deterministic ordering, structured keys, provenance independence, and input/result isolation. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Keep the package pure and deterministic; focused repeated/race tests plus formatting, vet, full tests, and build pass. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence without claiming broader/narrower, runtime enforcement, Claude support, or CLI availability. <!-- sdd-owner: implementation -->
+- [x] Record rollback boundary: revert `internal/compare/**` and this tracking only. <!-- sdd-owner: implementation -->
+
+Comparison integration remains required before release work, but it needs a separate approved issue and a human-approved chain reforecast after this API lands; do not start PR 20 from the provisional row above.
 
 ## Work Unit 7: CI, Release Build, Checksums, and Smoke
 

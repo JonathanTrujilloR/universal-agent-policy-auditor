@@ -260,3 +260,13 @@ Full checks passed: `git diff --check`; `gofmt -l .`; `go vet ./...`; `go test .
 Acceptance: WU5 A/B and aggregate evidence complete; version JSON and exit 1 stay deferred; WU6+ remain pending.
 Workload: 399 authored additions+deletions, hard cap 400; redundant fixture assertion removed, no production compression or delivery actions.
 Rollback: revert B CLI/tests and activation docs/task/progress only; retain app, redaction, JSON, and WU5-A text renderer.
+
+## 2026-09-13 — WU6 #19 pure comparison core (PR 19/22)
+
+Issue gate: approved issue `#19` governs only `internal/compare`; integration needs a separate approved issue and reforecast before release work.
+RED: `go test ./internal/compare` failed before the package API existed.
+GREEN: complete same-canonicalization, same-coverage canonical facts produce deterministic `equivalent`, directional `target-only`, `ambiguous`, or `not-comparable` results.
+TRIANGULATE: metadata, completeness, identity, trace, unresolved/unsupported effect, duplicate, semantic mismatch, structured-key, ordering, provenance, nonmutation, and result-independence cases pass.
+REFACTOR: pure model-only dependency, closed reason codes, sorted outputs, and no broader/narrower, app, renderer, CLI, or Claude claims.
+Verification: `go test ./internal/compare -count=25`; `go test ./... -count=25`; `go test -race ./...`; `go vet ./...`; `go test ./...`; `go build ./...`; `git diff --check` pass.
+Rollback: revert `internal/compare/**` and this tracking only.
