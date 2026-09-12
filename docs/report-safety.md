@@ -1,7 +1,7 @@
 # Safe report boundary
 
 `internal/redact.NewReport` converts application results into a closed, immutable
-DTO. Later renderers must accept only a `Report` with `Valid() == true`, never raw
+DTO. Renderers must accept only a `Report` with `Valid() == true`, never raw
 application/model values. The zero report is invalid; conversion failures return
 only `redact: unsafe report`, without input details.
 
@@ -37,5 +37,26 @@ repeated access and nested aliasing. Run `go test ./internal/redact -count=25` a
 Fuzzing checks bounded adversarial projections, not exhaustive privacy proof.
 
 Later integration must map a redaction error to `operational_failure` / exit `4`
-and must not print the rejected result. JSON/human rendering and CLI integration
-are deferred: the current source-built CLI remains category-only and pre-release.
+and must not print the rejected result. `internal/render/json.Marshal` now accepts
+only valid reports and returns complete `auditor-report/v1alpha1` JSON bytes with
+one trailing newline; invalid reports return no bytes and `json: invalid report`.
+The alpha schema is not stable. Field order is `schema`, `tool`, `result`,
+`exit_code`, `target`, `completeness`, `source_digests`, `permissions`, `findings`,
+then `limitations`. Tool fields are `name`, `version`; target fields are `name`,
+`requested_version`, `support_status`; permission fields are `capability`, `effect`,
+`scope`, `matcher`, `provenance_digests`; each finding has only `code`. Every field
+is present. Empty strings remain `""`, and empty collections are `[]`. Redacted
+array order is preserved. Standard `encoding/json` HTML escaping is accepted.
+
+A sanitized unsupported result therefore retains the closed state without local data:
+
+```json
+{"schema":"auditor-report/v1alpha1","tool":{"name":"universal-agent-policy-auditor","version":"dev"},"result":"unsupported_or_incomplete","exit_code":2,"target":{"name":"opencode","requested_version":"","support_status":"unsupported"},"completeness":"incomplete","source_digests":[],"permissions":[],"findings":[{"code":"unsupported-version"}],"limitations":["modeled-static-configuration"]}
+```
+
+No raw application/model values or injectable output DTOs are accepted.
+CLI activation and human rendering remain WU5: the source-built CLI is still
+category-only and pre-release. JSON adds no comparison, enforcement, security,
+compliance, anonymity, or other deferred guarantees. Renderer golden tests pin
+required fields, safe digests, empty arrays, exits and 100 byte-identical repeats:
+`go test ./internal/render/json -count=25`.
