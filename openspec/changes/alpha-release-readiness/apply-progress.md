@@ -280,3 +280,13 @@ TRIANGULATE: same/different paths, effect/malformed/incomplete/read failures, sy
 REFACTOR: audit behavior remains unchanged; focused tests pass 25 times and under race; formatting, vet, full tests, build, and diff checks pass.
 Acceptance: no adapter/support/source/redaction/render/CLI changes; no Claude, cross-client, broader/narrower, lossy, runtime, or output claims.
 Rollback: revert app comparison fields/path/tests and this tracking only; retain the pure #19 core.
+
+## 2026-09-13 — WU7-B1 #45 closed comparison redaction DTO (PR 21/28)
+
+Scope: user approved splitting the incomplete 358-line B spike into B1 DTO validation and B2 privacy/fuzz/docs, expanding the chain to 28 PRs; the spike was fully reverted before B1.
+RED: focused app/redact tests failed before mode metadata and `NewComparisonReport` existed.
+GREEN: a nominal zero-value-invalid comparison report admits only coherent closed OpenCode states, including explicit pre-core `unavailable`, and never accepts audit/version masquerading.
+TRIANGULATE: cover equivalent, target-only, ambiguous, semantic/incomplete/operational not-comparable, unavailable support/operational states, representative enum/digest/key/finding/limitation/version/state rejection, nonnil accessors, and copy isolation.
+REFACTOR: closed nominal status, bounded/deduplicated/sorted sources/reasons/differences/findings, fixed generic failure, focused repeated/race tests, vet, full tests, and build.
+Deferred to B2: exhaustive privacy canaries, fuzzing, accessor/cardinality matrices, 100-repeat ordering evidence, and comparison digest-risk docs.
+Rollback: revert app mode metadata, `internal/redact/comparison*`, and this tracking only; retain A and the pure #19 core.
