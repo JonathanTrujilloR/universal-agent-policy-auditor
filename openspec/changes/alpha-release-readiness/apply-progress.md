@@ -300,3 +300,18 @@ Fuzz: `go test ./internal/redact -run '^$' -fuzz '^FuzzComparisonReportPrivacy$'
 Validation: `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed; full tests also execute comparison fuzz seeds. Final whitespace validation: `git diff --check` passed.
 Boundary: 400 additions+deletions across the four assigned files; chain remains 28, C/D/E remain PRs 23/24/25, and no comparison renderer/CLI activation or delivery is claimed.
 Rollback: revert only `internal/redact/comparison_privacy_test.go`, the comparison section in `docs/report-safety.md`, and B2 task/progress edits; retain B1, A, and #19.
+
+## Comparison C — PR 23/28 complete (implementation only)
+
+Scope: #45 deterministic comparison JSON only; intermediate delivery uses `Refs #45`. D (text, PR 24/28) and E (CLI, PR 25/28) remain pending; parent owns delivery and review.
+RED: `go test ./internal/render/json -count=1` failed on missing `MarshalComparison` and `ErrInvalidComparisonReport` before production implementation.
+GREEN: the same command passed after adding opaque-report-only serialization, fixed nil-byte failure, ordered private structs, and one trailing newline.
+TRIANGULATE: six complete inline byte goldens cover equivalent/two sources, directional target-only, conflict ambiguity, semantic empty-only-in, unsupported unavailable, and operational operand failure; each runs 100 times with returned-byte mutation. Zero-value rejection and withheld version/finding projection pass.
+REFACTOR: `gofmt -w internal/render/json/comparison.go internal/render/json/comparison_test.go` passed; existing shared private tool/target/finding structs remain unchanged.
+Focused verification passed: `go test ./internal/render/json -count=25`; `go test -race ./internal/render/json -count=1`; `go test ./internal/redact -count=25`.
+Full verification passed: `gofmt -l .`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`; `git diff --check`.
+Audit compatibility: `report.go` and `report_test.go` have no diff; their existing exact-byte tests passed in focused and full suites.
+Acceptance: every schema field is present, empty strings/arrays remain explicit, validated order is retained, and only complete buffers escape. No comparison CLI activation or new safety/semantic guarantees.
+Tool note: automatic Pi-lens Go diagnostics were unavailable; explicit Go formatting, vet, tests, race, and build succeeded instead.
+Workload: 244 additions + 2 deletions = 246 authored changed lines across the five allowed files, including both new Go files; cap 400, no omitted goldens or compression.
+Rollback: revert only `internal/render/json/comparison.go`, `internal/render/json/comparison_test.go`, the comparison JSON section in `docs/report-safety.md`, and C task/progress edits; retain A/B1/B2 and pure #19.
