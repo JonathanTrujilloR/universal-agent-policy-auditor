@@ -38,12 +38,46 @@ collections are `[]`, never null or omitted. Validated accessor order is retaine
 using private ordered structs and standard `encoding/json` escaping, not maps.
 Six whole-byte goldens cover exits 0/2/4, all report statuses, empty fields,
 100 repeated renders per case, and returned-buffer independence. Existing audit
-JSON is unchanged. Comparison text and CLI activation remain later slices.
+JSON is unchanged. Comparison CLI activation remains a later slice.
 
 Serialization adds no semantic equivalence, runtime enforcement, security,
 anonymity, integrity, credential-detection, or compliance guarantee. Side-digest
 origin is not verified; dictionary guessing and cross-report correlation risks
 remain as described above.
+
+## Comparison human text (not CLI activated)
+
+`internal/render/text.RenderComparison` accepts only an opaque valid comparison
+report. Invalid/zero reports return nil bytes and `text: invalid comparison report`;
+valid reports return a complete owned buffer, never partial output.
+
+Lines appear in this exact order: Tool, Result, Comparison status, Reasons,
+Differences, Findings, Target, Requested version, Support status, Completeness,
+Comparison sources, Limitations. Result uses `<category> (exit <code>)`.
+Tool is `universal-agent-policy-auditor`, followed by ` <version>` only when nonempty;
+Target is `opencode`. Empty requested versions and empty sections are omitted.
+Nonempty sections have a colon heading and these item layouts:
+
+```text
+Reasons:
+- side=<side>; code=<code>
+Differences:
+- capability=<capability>; scope=<scope>; matcher=<matcher>; only_in=<side-or-empty>; outcome=<outcome>; reason_side=<side>; reason_code=<code>
+Findings:
+- <code>
+Comparison sources:
+- side=<side>; digest=<digest>
+Limitations:
+- <limitation>
+```
+
+Semantic differences retain empty `only_in=`. Safe accessor order is preserved.
+Output has exactly one final newline, no blank lines or trailing whitespace, and
+no ANSI/color, TTY detection, environment, locale, clock, path lookup, or JSON
+serialization dependency. Six whole-byte goldens run 100 times each with buffer
+mutation, UTF-8/whitespace checks and forbidden-output checks. Existing audit text
+is unchanged. Rendering adds no guarantees beyond the comparison boundary above;
+comparison CLI activation remains deferred to E.
 
 ## Accepted and withheld fields
 

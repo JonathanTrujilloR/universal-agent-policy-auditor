@@ -315,3 +315,17 @@ Acceptance: every schema field is present, empty strings/arrays remain explicit,
 Tool note: automatic Pi-lens Go diagnostics were unavailable; explicit Go formatting, vet, tests, race, and build succeeded instead.
 Workload: 244 additions + 2 deletions = 246 authored changed lines across the five allowed files, including both new Go files; cap 400, no omitted goldens or compression.
 Rollback: revert only `internal/render/json/comparison.go`, `internal/render/json/comparison_test.go`, the comparison JSON section in `docs/report-safety.md`, and C task/progress edits; retain A/B1/B2 and pure #19.
+
+## Comparison D — PR 24/28 complete (implementation only)
+
+Scope: #45 deterministic blockers-first comparison text; E (CLI, PR 25/28) remains pending. No stage, commit, push, issue, PR, or review actions performed.
+RED: `go test ./internal/render/text -run TestRenderComparison -count=1` failed on undefined `RenderComparison` and `ErrInvalidComparisonReport` before production implementation.
+GREEN: the same command passed after adding opaque-accessor rendering with complete owned bytes and fixed nil-byte invalid-report rejection.
+TRIANGULATE: six whole-byte goldens parallel JSON, each with 100 renders and buffer mutation, cover all comparison statuses, exits 0/2/4, withheld/empty versions, absent sources/sections, semantic empty `only_in=`, UTF-8, forbidden bytes, final newline and whitespace.
+REFACTOR: `gofmt -w internal/render/text/comparison.go internal/render/text/comparison_test.go` passed; no existing audit renderer/test files changed.
+Focused verification passed: `go test ./internal/render/text -count=25`; `go test -race ./internal/render/text -count=1`; `go test ./internal/redact -count=25`.
+Full verification passed: `gofmt -l .`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`; `git diff --check`.
+Acceptance: blockers precede target metadata, safe DTO order is retained, empty sections are omitted, no ANSI or ambient input dependencies; no new guarantees or CLI activation. Existing audit goldens passed unchanged in the full suite.
+Tool note: automatic Pi-lens Go diagnostics were unavailable; explicit Go validation passed.
+Workload: 315 additions + 3 deletions = 318 authored changed lines across the five allowed files, including both new Go files; cap 400, no compression.
+Rollback: revert only `internal/render/text/comparison.go`, `internal/render/text/comparison_test.go`, comparison-human docs and D task/progress edits; retain C, B1/B2, A and pure #19.
