@@ -15,6 +15,36 @@ Collections are defensive copies: sources sort by side, reasons by side/code, di
 Unsafe versions are empty with one withholding marker in permitted incomplete states; complete/equivalent rejects them. Missing requested versions are not withholding.
 Comparison privacy tests cover closed enums, raw caps before deduplication, ignored-channel canaries, 100 permutations, copies, and bounded accessor-projection fuzzing.
 
+## Comparison JSON (not CLI activated)
+
+`internal/render/json.MarshalComparison` consumes only an opaque valid
+`redact.ComparisonReport`. It returns complete `auditor-comparison-report/v1alpha1`
+bytes with exactly one trailing newline, or nil bytes and the fixed error
+`json: invalid comparison report` for an invalid/zero report or marshal failure.
+No partial buffer is returned. The alpha schema is intentionally unstable.
+
+Every field is present, in this order: `schema`, `tool`, `result`, `exit_code`,
+`target`, `completeness`, `comparison_status`, `comparison_sources`, `reasons`,
+`differences`, `findings`, `limitations`. Nested field order is:
+
+- `tool`: `name`, `version`; name is `universal-agent-policy-auditor`.
+- `target`: `name`, `requested_version`, `support_status`.
+- Each comparison source: `side`, `digest`; each reason: `side`, `code`.
+- Each difference: `capability`, `scope`, `matcher`, `only_in`, `outcome`, `reason`.
+- Each finding: `code`.
+
+Empty strings remain `""` (including semantic differences' `only_in`); empty
+collections are `[]`, never null or omitted. Validated accessor order is retained
+using private ordered structs and standard `encoding/json` escaping, not maps.
+Six whole-byte goldens cover exits 0/2/4, all report statuses, empty fields,
+100 repeated renders per case, and returned-buffer independence. Existing audit
+JSON is unchanged. Comparison text and CLI activation remain later slices.
+
+Serialization adds no semantic equivalence, runtime enforcement, security,
+anonymity, integrity, credential-detection, or compliance guarantee. Side-digest
+origin is not verified; dictionary guessing and cross-report correlation risks
+remain as described above.
+
 ## Accepted and withheld fields
 
 | Input | Report policy |
