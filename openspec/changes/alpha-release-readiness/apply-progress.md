@@ -290,3 +290,13 @@ TRIANGULATE: cover equivalent, target-only, ambiguous, semantic/incomplete/opera
 REFACTOR: closed nominal status, bounded/deduplicated/sorted sources/reasons/differences/findings, fixed generic failure, focused repeated/race tests, vet, full tests, and build.
 Deferred to B2: exhaustive privacy canaries, fuzzing, accessor/cardinality matrices, 100-repeat ordering evidence, and comparison digest-risk docs.
 Rollback: revert app mode metadata, `internal/redact/comparison*`, and this tracking only; retain A and the pure #19 core.
+
+## Comparison B2 — PR 22/28 complete (implementation only)
+RED: `go test ./internal/redact -run 'TestComparison.*Privacy|TestComparison.*Cardinality|TestComparison.*Ordering|TestComparison.*Copies' -count=25` failed 50 version subtests under the original rejection requirement; parent explicitly preserved B1 withholding instead. No production defect or implementation fix is claimed.
+GREEN: the same focused command passed after the approved version-contract amendment; an intermediate compile failure required a test-only `model.Scope` conversion.
+TRIANGULATE: closed-context matrices, raw cardinality caps/dedup, canary channels, defensive accessors, and 100 independent permutations each for reason and semantic states passed; `go test -race ./internal/redact` passed including seeds.
+REFACTOR: `gofmt -w internal/redact/comparison_privacy_test.go` and the focused command passed after adding nearby-value rejection; production and audit tests remain unchanged.
+Fuzz: `go test ./internal/redact -run '^$' -fuzz '^FuzzComparisonReportPrivacy$' -fuzztime=3s -parallel=1` passed 160 seeds and 1,554 executions, zero new interesting inputs; bounded fuzzing is not exhaustive proof.
+Validation: `go vet ./...`, `go test ./... -count=1`, and `go build ./...` passed; full tests also execute comparison fuzz seeds. Final whitespace validation: `git diff --check` passed.
+Boundary: 400 additions+deletions across the four assigned files; chain remains 28, C/D/E remain PRs 23/24/25, and no comparison renderer/CLI activation or delivery is claimed.
+Rollback: revert only `internal/redact/comparison_privacy_test.go`, the comparison section in `docs/report-safety.md`, and B2 task/progress edits; retain B1, A, and #19.

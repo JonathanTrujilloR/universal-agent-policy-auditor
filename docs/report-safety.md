@@ -5,6 +5,16 @@ DTO. Renderers must accept only a `Report` with `Valid() == true`, never raw
 application/model values. The zero report is invalid; conversion failures return
 only `redact: unsafe report`, without input details.
 
+## Comparison report boundary
+
+`NewComparisonReport` is a separate opaque safety boundary; comparison CLI/output is not activated yet.
+It retains no raw path, config, provenance, message, or runtime token. Status `unavailable` is a redaction state, not a core outcome.
+App-produced side digests identify canonical paths; redaction validates syntax, not origin. Unsalted values permit low-entropy dictionary guessing and cross-report correlation.
+Redaction provides neither anonymity, credential detection, semantic equivalence, integrity, runtime enforcement, nor compliance.
+Collections are defensive copies: sources sort by side, reasons by side/code, differences lexically by capability/scope/matcher/side/outcome/reason, findings by code.
+Unsafe versions are empty with one withholding marker in permitted incomplete states; complete/equivalent rejects them. Missing requested versions are not withholding.
+Comparison privacy tests cover closed enums, raw caps before deduplication, ignored-channel canaries, 100 permutations, copies, and bounded accessor-projection fuzzing.
+
 ## Accepted and withheld fields
 
 | Input | Report policy |
