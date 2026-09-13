@@ -28,6 +28,14 @@ func (f *comparisonFS) ReadFile(path string) ([]byte, error) {
 	return f.OSReadFS.ReadFile(path)
 }
 
+func TestResultMode(t *testing.T) {
+	for _, mode := range []Mode{ModeAudit, ModeCompare, ModeVersion} {
+		if got := Run(Request{Mode: mode}).Mode; got != mode {
+			t.Fatalf("mode = %q, want %q", got, mode)
+		}
+	}
+}
+
 func TestCompareIntegration(t *testing.T) {
 	good := []byte(`{"permission":{"read":"allow","edit":"deny","bash":"ask"}}`)
 	for _, variant := range []string{"equivalent", "same", "effect", "malformed-reference", "incomplete-target", "read-failure"} {
@@ -131,7 +139,7 @@ func TestCompareAdmission(t *testing.T) {
 				t.Fatal("unexpected comparison")
 				return compare.Result{}
 			}})
-			if got.Category != tc.want || files.calls != 0 || loads != tc.loads || got.Comparison != nil {
+			if got.Mode != ModeCompare || got.Category != tc.want || files.calls != 0 || loads != tc.loads || got.Comparison != nil {
 				t.Fatalf("result=%+v reads=%d loads=%d", got, files.calls, loads)
 			}
 		})
@@ -144,7 +152,7 @@ func TestCompareAdmission(t *testing.T) {
 		if loaderFailure {
 			deps.loadSupport = func() (support.Matrix, error) { return support.Matrix{}, errors.New("private path") }
 		}
-		if got := runWithOptions(req, deps); got.Category != OperationalFailure {
+		if got := runWithOptions(req, deps); got.Mode != ModeCompare || got.Category != OperationalFailure || got.Comparison != nil {
 			t.Fatalf("result=%+v", got)
 		}
 	}

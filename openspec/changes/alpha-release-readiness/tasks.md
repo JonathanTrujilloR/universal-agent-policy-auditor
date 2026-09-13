@@ -7,7 +7,7 @@
 | Estimated changed lines | 2,340-3,340+ authored lines total: 940 current planning lines plus 1,400-2,400 implementation lines and this correction |
 | 400-line budget risk | High |
 | Chained PRs recommended | Yes |
-| Suggested split | Planning PRs A-D → PR 5 public identity → PR 6 CLI/app shell → PRs 7-12 WU3 → PRs 13-16 WU4 → PRs 17-18 WU5 → PR 19 #19 comparison core → PRs 20-24 #45 comparison app/redaction/JSON/text/CLI → PR 25 CI/release build → PR 26 release docs/prerelease → PR 27 post-release pilot pack |
+| Suggested split | Planning PRs A-D → PR 5 public identity → PR 6 CLI/app shell → PRs 7-12 WU3 → PRs 13-16 WU4 → PRs 17-18 WU5 → PR 19 #19 comparison core → PRs 20-25 #45 comparison app/redaction DTO/privacy/JSON/text/CLI → PR 26 CI/release build → PR 27 release docs/prerelease → PR 28 post-release pilot pack |
 | Delivery strategy | ask-on-risk |
 | Chain strategy | stacked-to-main |
 
@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 20 of 27, #45 comparison integration A (application only). Planning PRs A-D, WU1-WU5, and the pure #19 core are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A-E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 21 of 28, #45 comparison integration B1 (closed redaction DTO). Planning PRs A-D, WU1-WU6, and #45-A are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A, B1, B2, C, D, and E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -129,13 +129,14 @@ Issue gate: approved issue `#19` governs only a pure canonical permission compar
 
 ## Work Unit 7: #45 Safe OpenCode Comparison Integration
 
-Issue gate: approved issue `#45` governs five bounded slices and expands the chain to 27 PRs. The first alpha compares only two explicit OpenCode 1.18.27 configs; exit 1 remains reserved, no-format output remains category-only, and JSON uses `auditor-comparison-report/v1alpha1`. Cross-client comparison, Claude support, broader/narrower, lossy inference, and runtime enforcement remain excluded.
+Issue gate: approved issue `#45` governs six bounded slices and expands the chain to 28 PRs. The first alpha compares only two explicit OpenCode 1.18.27 configs; exit 1 remains reserved, no-format output remains category-only, and JSON uses `auditor-comparison-report/v1alpha1`. Cross-client comparison, Claude support, broader/narrower, lossy inference, and runtime enforcement remain excluded.
 
-- [x] A (PR 20/27): Integrate two independently admitted operands in `internal/app`, delegate exactly once to #19, map only equivalent to success, and preserve audit behavior. <!-- sdd-owner: implementation -->
-- [ ] B (PR 21/27): Add opaque comparison redaction with closed fields/reasons, defensive copies, privacy canaries, and fuzzing. <!-- sdd-owner: implementation -->
-- [ ] C (PR 22/27): Add deterministic atomic JSON for `auditor-comparison-report/v1alpha1`; audit JSON remains unchanged. <!-- sdd-owner: implementation -->
-- [ ] D (PR 23/27): Add deterministic atomic blockers-first human comparison text. <!-- sdd-owner: implementation -->
-- [ ] E (PR 24/27): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
+- [x] A (PR 20/28): Integrate two independently admitted operands in `internal/app`, delegate exactly once to #19, map only equivalent to success, and preserve audit behavior. <!-- sdd-owner: implementation -->
+- [x] B1 (PR 21/28): Add a nominal comparison-mode marker and opaque zero-value-invalid DTO with closed state, source, reason, difference, finding, limitation, version, ordering, bound, and copy validation. <!-- sdd-owner: implementation -->
+- [ ] B2 (PR 22/28): Add exhaustive privacy canaries, fuzzing, accessor/cardinality matrices, repeated ordering evidence, and comparison digest-risk docs. <!-- sdd-owner: implementation -->
+- [ ] C (PR 23/28): Add deterministic atomic JSON for `auditor-comparison-report/v1alpha1`; audit JSON remains unchanged. <!-- sdd-owner: implementation -->
+- [ ] D (PR 24/28): Add deterministic atomic blockers-first human comparison text. <!-- sdd-owner: implementation -->
+- [ ] E (PR 25/28): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
 - [x] RED A: Focused app tests failed before `ModeCompare` and comparison request/result metadata existed. <!-- sdd-owner: implementation -->
 - [x] GREEN A: Exact supported operands are independently selected/resolved; equivalent maps to 0 and every non-equivalent core result maps to 2. <!-- sdd-owner: implementation -->
 - [x] TRIANGULATE A: Cover same/different paths, semantic/incomplete/operational failures, admission-before-I/O, exact one comparator call, digests, nonmutation, defensive copies, and reserved exit 1. <!-- sdd-owner: implementation -->
@@ -178,7 +179,7 @@ Issue gate: blocked until a dedicated pilot-pack Work Unit issue is approved; pi
 ## Human-Controlled Delivery Gates
 
 - [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Completed issues govern delivered WUs; approved issue `#45` governs only comparison integration A-E, while later release Work Units still require their own approvals. <!-- sdd-owner: parent -->
-- [x] Approved the corrected 27-PR total chain forecast through five #45 integration slices under `ask-on-risk` using `stacked-to-main`; no `size:exception` is authorized. <!-- sdd-owner: parent -->
+- [x] Approved the corrected 28-PR total chain forecast after splitting #45 comparison redaction into B1 DTO validation and B2 privacy/fuzz/docs; no `size:exception` is authorized. <!-- sdd-owner: parent -->
 - [x] Approved issue `#21` as the coherent planning authority for Planning PRs A-D; issue `#20` remains limited to public identity implementation. <!-- sdd-owner: parent -->
 - [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
 - [ ] Confirm the exact OpenCode version/evidence boundary before Work Unit 3 claims support. <!-- sdd-owner: parent -->

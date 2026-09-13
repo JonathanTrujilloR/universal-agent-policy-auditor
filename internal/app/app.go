@@ -60,6 +60,7 @@ type ComparisonSource struct {
 }
 
 type Result struct {
+	Mode                   Mode
 	Comparison             *compare.Result
 	ComparisonSources      []ComparisonSource
 	Category               Category
@@ -88,7 +89,7 @@ func runWithOptions(req Request, options options) Result {
 	deps := normalizeOptions(options)
 	switch req.Mode {
 	case ModeVersion:
-		return Result{Category: CompleteNoFindings, Message: "version", Build: normalize(req.Build), Completeness: model.CompletenessComplete}
+		return Result{Mode: req.Mode, Category: CompleteNoFindings, Message: "version", Build: normalize(req.Build), Completeness: model.CompletenessComplete}
 	case ModeAudit:
 		return audit(req, deps)
 	case ModeCompare:
@@ -230,6 +231,7 @@ func audit(req Request, options options) Result {
 
 func auditResult(req Request, build BuildInfo, category Category, message string, status SupportStatus) Result {
 	return Result{
+		Mode:                   req.Mode,
 		ComparisonSources:      []ComparisonSource{},
 		Category:               category,
 		Message:                message,
