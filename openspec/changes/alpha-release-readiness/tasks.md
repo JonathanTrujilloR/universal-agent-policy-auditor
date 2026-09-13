@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 23 of 28, #45 comparison integration C (deterministic JSON), implementation complete. Planning PRs A-D, WU1-WU6, and #45-A/B1/B2 are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A, B1, B2, C, D, and E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 24 of 28, #45 comparison integration D (deterministic human text), implementation complete; E (CLI, PR 25/28) remains pending. Planning PRs A-D, WU1-WU6, and #45-A/B1/B2 are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A, B1, B2, C, D, and E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -135,7 +135,7 @@ Issue gate: approved issue `#45` governs six bounded slices and expands the chai
 - [x] B1 (PR 21/28): Add a nominal comparison-mode marker and opaque zero-value-invalid DTO with closed state, source, reason, difference, finding, limitation, version, ordering, bound, and copy validation. <!-- sdd-owner: implementation -->
 - [x] B2 (PR 22/28): Add exhaustive privacy canaries, fuzzing, accessor/cardinality matrices, repeated ordering evidence, and comparison digest-risk docs. <!-- sdd-owner: implementation -->
 - [x] C (PR 23/28): Add deterministic atomic JSON for `auditor-comparison-report/v1alpha1`; audit JSON remains unchanged. TDD, verification, count, and rollback evidence are recorded in apply-progress. <!-- sdd-owner: implementation -->
-- [ ] D (PR 24/28): Add deterministic atomic blockers-first human comparison text. <!-- sdd-owner: implementation -->
+- [x] D (PR 24/28): Add deterministic atomic blockers-first human comparison text; six byte goldens, TDD, verification, count, and rollback are recorded in apply-progress. <!-- sdd-owner: implementation -->
 - [ ] E (PR 25/28): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
 - [x] RED A: Focused app tests failed before `ModeCompare` and comparison request/result metadata existed. <!-- sdd-owner: implementation -->
 - [x] GREEN A: Exact supported operands are independently selected/resolved; equivalent maps to 0 and every non-equivalent core result maps to 2. <!-- sdd-owner: implementation -->
