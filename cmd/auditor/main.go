@@ -20,10 +20,11 @@ type dependencies struct {
 	run        func(app.Request) app.Result
 	redact     func(app.Result) (redact.Report, error)
 	text, json func(redact.Report) ([]byte, error)
+	comparison func(app.Result, string) ([]byte, error)
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
-	return runWith(args, stdout, stderr, dependencies{app.Run, redact.NewReport, text.Render, jsonreport.Marshal})
+	return runWith(args, stdout, stderr, dependencies{app.Run, redact.NewReport, text.Render, jsonreport.Marshal, renderComparison})
 }
 
 func runWith(args []string, stdout, stderr io.Writer, deps dependencies) int {
@@ -45,6 +46,14 @@ func runWith(args []string, stdout, stderr io.Writer, deps dependencies) int {
 			} else {
 				result = deps.run(app.Request{Mode: app.ModeVersion, Build: buildInfo()})
 			}
+		case "compare":
+			req, selected := parseComparison(args[1:])
+			if req.Mode != app.ModeCompare {
+				result = app.Result{Category: app.InvalidRequest}
+			} else {
+				result = deps.run(req)
+				format = selected
+			}
 		case "audit":
 			var req app.Request
 			req, format = parseOutputAudit(args[1:])
@@ -58,14 +67,12 @@ func runWith(args []string, stdout, stderr io.Writer, deps dependencies) int {
 		}
 	}
 	if format != "" {
-		report, err := deps.redact(result)
 		var data []byte
-		if err == nil {
-			render := deps.text
-			if format == "json" {
-				render = deps.json
-			}
-			data, err = render(report)
+		var err error
+		if args[0] == "compare" {
+			data, err = deps.comparison(result, format)
+		} else {
+			data, err = renderAudit(result, format, deps)
 		}
 		if err != nil || len(data) == 0 {
 			_ = writeExact(stderr, []byte("operational_failure\n"))
@@ -80,6 +87,56 @@ func runWith(args []string, stdout, stderr io.Writer, deps dependencies) int {
 		return app.ExitCode(app.OperationalFailure)
 	}
 	return app.ExitCode(result.Category)
+}
+
+func renderAudit(result app.Result, format string, deps dependencies) ([]byte, error) {
+	report, err := deps.redact(result)
+	var data []byte
+	if err == nil {
+		render := deps.text
+		if format == "json" {
+			render = deps.json
+		}
+		data, err = render(report)
+	}
+	return data, err
+}
+
+func renderComparison(result app.Result, format string) ([]byte, error) {
+	report, err := redact.NewComparisonReport(result)
+	if err != nil {
+		return nil, err
+	}
+	if format == "json" {
+		return jsonreport.MarshalComparison(report)
+	}
+	return text.RenderComparison(report)
+}
+
+func parseComparison(args []string) (app.Request, string) {
+	invalid := app.Request{}
+	end, format := len(args), ""
+	noColor := end > 0 && args[end-1] == "--no-color"
+	if noColor {
+		end--
+	}
+	if end >= 2 && args[end-2] == "--format" {
+		format = args[end-1]
+		end -= 2
+		if format != "text" && format != "json" {
+			return invalid, ""
+		}
+	}
+	if noColor && format != "text" || end != 9 || args[0] != "opencode" {
+		return invalid, ""
+	}
+	for i, flag := range []string{"--root", "--reference-config", "--target-config", "--opencode-version"} {
+		value := args[2+i*2]
+		if args[1+i*2] != flag || value == "" || strings.HasPrefix(value, "--") {
+			return invalid, ""
+		}
+	}
+	return app.Request{Mode: app.ModeCompare, Target: app.TargetOpenCode, Root: args[2], ReferenceConfig: args[4], TargetConfig: args[6], TargetVersion: args[8], Build: buildInfo()}, format
 }
 
 func parseOutputAudit(args []string) (app.Request, string) {
@@ -167,6 +224,7 @@ func helpText() string {
 		"Usage:\n" +
 		"  auditor version\n" +
 		"  auditor audit <target> --root <abs> --config <abs> [--opencode-version <v>] [--format text|json] [--no-color]\n" +
+		"  auditor compare opencode --root <abs> --reference-config <abs> --target-config <abs> --opencode-version <v> [--format text|json] [--no-color]\n" +
 		"Exit categories:\n" +
 		"  0 complete_no_findings\n" +
 		"  1 complete_with_findings\n" +

@@ -16,7 +16,7 @@ Chained PRs recommended: Yes
 Chain strategy: stacked-to-main
 400-line budget risk: High
 
-Current slice: implementation PR 24 of 28, #45 comparison integration D (deterministic human text), implementation complete; E (CLI, PR 25/28) remains pending. Planning PRs A-D, WU1-WU6, and #45-A/B1/B2 are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A, B1, B2, C, D, and E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
+Current slice: implementation PR 25 of 28, #45 comparison integration E (CLI), implementation complete; parent review and delivery remain pending. Planning PRs A-D, WU1-WU6, and #45-A/B1/B2 are delivered; issues `#19`, `#36`, and `#41` are closed. Approved issue `#45` governs integration slices A, B1, B2, C, D, and E; only final E delivery closes it. Chain: `stacked-to-main`, each slice targets `main`, stays within 400 authored changed lines, and records rollback/evidence independently. No `size:exception` is authorized.
 
 ## Task Ordering and Completion Rules
 
@@ -136,12 +136,12 @@ Issue gate: approved issue `#45` governs six bounded slices and expands the chai
 - [x] B2 (PR 22/28): Add exhaustive privacy canaries, fuzzing, accessor/cardinality matrices, repeated ordering evidence, and comparison digest-risk docs. <!-- sdd-owner: implementation -->
 - [x] C (PR 23/28): Add deterministic atomic JSON for `auditor-comparison-report/v1alpha1`; audit JSON remains unchanged. TDD, verification, count, and rollback evidence are recorded in apply-progress. <!-- sdd-owner: implementation -->
 - [x] D (PR 24/28): Add deterministic atomic blockers-first human comparison text; six byte goldens, TDD, verification, count, and rollback are recorded in apply-progress. <!-- sdd-owner: implementation -->
-- [ ] E (PR 25/28): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
+- [x] E (PR 25/28): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
 - [x] RED A: Focused app tests failed before `ModeCompare` and comparison request/result metadata existed. <!-- sdd-owner: implementation -->
 - [x] GREEN A: Exact supported operands are independently selected/resolved; equivalent maps to 0 and every non-equivalent core result maps to 2. <!-- sdd-owner: implementation -->
 - [x] TRIANGULATE A: Cover same/different paths, semantic/incomplete/operational failures, admission-before-I/O, exact one comparator call, digests, nonmutation, defensive copies, and reserved exit 1. <!-- sdd-owner: implementation -->
 - [x] REFACTOR A: App-only changes pass repeated/race focused tests plus formatting, vet, full tests, and build. <!-- sdd-owner: implementation -->
-- [ ] Record aggregate A-E acceptance and rollback evidence; reverting integration must retain the pure #19 core. <!-- sdd-owner: implementation -->
+- [x] Record aggregate A-E acceptance and rollback evidence; reverting integration must retain the pure #19 core. <!-- sdd-owner: implementation -->
 
 ## Work Unit 8: CI, Release Build, Checksums, and Smoke
 
