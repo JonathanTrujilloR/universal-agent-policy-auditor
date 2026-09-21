@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
 )
 
 var ErrInvalidReport = errors.New("text: invalid report")

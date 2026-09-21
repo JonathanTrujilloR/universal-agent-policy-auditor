@@ -9,11 +9,11 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
-	renderjson "github.com/jkelevra/universal-agent-policy-auditor/internal/render/json"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
+	renderjson "github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/render/json"
 )
 
 const safeDigest = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"

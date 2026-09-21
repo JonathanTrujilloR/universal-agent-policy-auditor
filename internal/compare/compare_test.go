@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 )
 
 func permission(key string, effect model.Effect, conditions []string, extensions []model.Extension) model.Permission {

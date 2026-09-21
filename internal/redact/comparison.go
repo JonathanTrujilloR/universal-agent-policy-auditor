@@ -5,8 +5,8 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/compare"
 )
 
 type ComparisonStatus string

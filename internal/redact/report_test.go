@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 )
 
 func TestNewReportAcceptsExactAppRunSuccess(t *testing.T) {

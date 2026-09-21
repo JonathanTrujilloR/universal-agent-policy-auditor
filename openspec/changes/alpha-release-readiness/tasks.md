@@ -186,3 +186,9 @@ Issue gate: blocked until a dedicated pilot-pack Work Unit issue is approved; pi
 - [ ] Confirm release candidate evidence is complete before creating tag `v0.1.0-alpha.1`. <!-- sdd-owner: parent -->
 - [ ] Create and publish the GitHub prerelease, upload Linux amd64 binary and `checksums.txt`, and verify published artifacts manually. <!-- sdd-owner: parent -->
 - [ ] Start post-release pilot outreach only after the prerelease is published and artifact/checksum links are known. <!-- sdd-owner: parent -->
+
+## Discovered Work Unit: #51 Canonical Go Module Identity
+
+Issue gate: parent-confirmed approved #51 (`status:approved`, exactly `type:feature`). Delivery: auto-chain, stacked-to-main after merged #50; one bounded final issue slice, no release or GitHub mutation. Forecast: 142 replacement lines plus at most 150 tracking lines, below 400.
+
+- [x] WU51.1: Align only the Go module directive and exact internal import prefix with `github.com/JonathanTrujilloR/universal-agent-policy-auditor`; prove structural RED/GREEN, no old source/module prefix, canonical package resolution, formatting/tests/vet/build/diff checks, and record exact count and rollback. <!-- sdd-owner: implementation -->

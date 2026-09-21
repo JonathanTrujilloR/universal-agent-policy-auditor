@@ -12,7 +12,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 )
 
 func TestValidateFailsClosedForUnprovenPermissionMetadata(t *testing.T) {

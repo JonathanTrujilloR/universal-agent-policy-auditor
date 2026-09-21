@@ -1,9 +1,9 @@
 package redact
 
 import (
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/compare"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 	"strings"
 	"testing"
 )

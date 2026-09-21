@@ -329,3 +329,102 @@ Acceptance: blockers precede target metadata, safe DTO order is retained, empty 
 Tool note: automatic Pi-lens Go diagnostics were unavailable; explicit Go validation passed.
 Workload: 315 additions + 3 deletions = 318 authored changed lines across the five allowed files, including both new Go files; cap 400, no compression.
 Rollback: revert only `internal/render/text/comparison.go`, `internal/render/text/comparison_test.go`, comparison-human docs and D task/progress edits; retain C, B1/B2, A and pure #19.
+
+## Discovered Work Unit #51: Canonical Go module identity
+
+Status: assigned implementation complete; parent lifecycle and settlement remain deferred. Approved issue #51 (`status:approved`, exactly `type:feature`) was confirmed by the parent.
+Branch: `feat/canonical-go-module-identity`; base and HEAD: `ee6287c9e9aa478a237e6a2370ded351ed6c0ff2` (`origin/main`, merged #50).
+Structured status consumed: `gentle-ai.sdd-status/v2`, change `alpha-release-readiness`, OpenSpec authority with Engram session persistence, apply ready, dependencies.apply ready, nextRecommended apply, initial 65/91 tasks complete.
+Action context: repo-local alpha workspace; only module/import files and these two tracking artifacts are editable; no warnings. The separate Claude worktree was not edited.
+Workload: explicit auto-chain / stacked-to-main resolves the historical high-risk forecast for this bounded slice only; no exception. Final issue slice may use `Closes #51` when parent prepares delivery; no PR was created.
+
+### TDD Cycle Evidence
+| Phase | Exact command and result |
+|---|---|
+| SAFETY | `go test ./...` exited 0; 12 packages passed before changes (cached). |
+| RED | `test "$(go list -m)" = "github.com/JonathanTrujilloR/universal-agent-policy-auditor"` exited 1 before replacement. |
+| GREEN | The identical structural command exited 0 after replacement. |
+| TRIANGULATE | `git grep -n -F 'github.com/jkelevra/universal-agent-policy-auditor' -- '*.go' go.mod go.sum` exited 1, no matches; `go list ./...` exited 0, all 12 packages canonical. |
+| REFACTOR | None needed: exact byte replacement only. `test -z "$(gofmt -l .)"`, `go test ./...`, `go vet ./...`, `go build ./...`, and `git diff --check` each exited 0; formatting/vet/build/diff output empty, 12 test packages passed. |
+
+Additional executable structural assertion (exit 0):
+```python
+import subprocess
+prefix = 'github.com/JonathanTrujilloR/universal-agent-policy-auditor/'
+packages = subprocess.check_output(['go', 'list', './...'], text=True).splitlines()
+assert len(packages) == 12 and all(p.startswith(prefix) for p in packages)
+```
+Byte preservation assertion (exit 0): for every changed Go/module file, current bytes equal `git show HEAD:<file>` with only the exact old module prefix replaced by the canonical prefix. Every old match was checked as a module directive or quoted internal import; no generated file was changed.
+
+### Work Unit Evidence
+| Evidence | Result |
+|---|---|
+| Focused check | Structural module equality: RED 1, GREEN 0; canonical package and old-prefix assertions pass. |
+| Runtime harness | N/A: this is module/import identity only, with no changed runtime boundary; existing CLI and integration-style package tests ran in the full suite. |
+| Rollback | Revert the 27 module/import paths listed below together, remove only WU51 task/progress additions; retain all earlier Work Units. No target state to restore. |
+
+### Exact changed files
+- `cmd/auditor/main.go`
+- `cmd/auditor/main_test.go`
+- `go.mod`
+- `internal/adapter/claudecode/claudecode.go`
+- `internal/adapter/claudecode/claudecode_test.go`
+- `internal/adapter/opencode/opencode.go`
+- `internal/adapter/opencode/opencode_test.go`
+- `internal/app/app.go`
+- `internal/app/app_test.go`
+- `internal/compare/compare.go`
+- `internal/compare/compare_test.go`
+- `internal/redact/comparison.go`
+- `internal/redact/comparison_privacy_test.go`
+- `internal/redact/comparison_test.go`
+- `internal/redact/report.go`
+- `internal/redact/report_privacy_test.go`
+- `internal/redact/report_test.go`
+- `internal/render/json/comparison.go`
+- `internal/render/json/comparison_test.go`
+- `internal/render/json/report.go`
+- `internal/render/json/report_test.go`
+- `internal/render/text/comparison.go`
+- `internal/render/text/comparison_test.go`
+- `internal/render/text/report.go`
+- `internal/render/text/report_test.go`
+- `support/matrix.go`
+- `support/matrix_test.go`
+- `openspec/changes/alpha-release-readiness/tasks.md`
+- `openspec/changes/alpha-release-readiness/apply-progress.md`
+
+Completed checkbox: WU51.1 is checked after all evidence passed; all prior task lines and prior progress bytes remain unchanged. Cumulative tasks: 66/92 complete, 26 pending.
+Deviations: none from the parent-approved structural extension; no runtime/API/package semantics, dependencies, fixtures, generated files, docs, workflows, or support evidence changed.
+No commit, stage, push, issue/PR mutation, merge, tag, release, authority acquisition/settlement, or review actors were performed.
+
+### Remaining exact unchecked tasks (unchanged; parent rows deferred lifecycle)
+- [ ] E (PR 25/28): Activate strict CLI grammar, category-only default, explicit text/JSON, and single-write transport; final E delivery closes #45. <!-- sdd-owner: implementation -->
+- [ ] Record aggregate A-E acceptance and rollback evidence; reverting integration must retain the pure #19 core. <!-- sdd-owner: implementation -->
+- [ ] RED: Add failing workflow/script tests or dry-run checks for formatting, vetting, tests, Linux amd64 build, version injection, checksum generation, and smoke command capture; focused command: relevant script dry-run plus `go test ./...`. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Add CI/release readiness workflow or scripts for `gofmt -l .`, `go vet ./...`, `go test ./...`, `GOOS=linux GOARCH=amd64 go build`, `checksums.txt`, and smoke commands without publishing. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add smoke coverage for plain `auditor version` and explicit-format `audit opencode` against the checked-in supported fixture; version JSON remains deferred. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Keep release helpers deterministic and free of package-manager, signing, provenance, extra-platform, GitHub publication, or tag creation side effects. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
+- [ ] RED: Add documentation claim-boundary checks or structural review checklist that fails when release docs omit Apache-2.0, static-analysis limitations, Linux amd64 evidence, checksums, unsupported Claude, unsupported package managers, or OpenCode evidence references. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Write install, usage, support matrix, limitations, release notes draft, checksum instructions, and smoke evidence references grounded only in checked-in facts. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add negative claim checks for production readiness, security/compliance guarantees, runtime enforcement, package-manager install, unsupported platforms, signing/provenance, and adoption/pilot success. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Make docs reviewer-friendly with quick path, evidence table, limitations, and rollback/publication notes; full verification includes structural readback plus `gofmt -l . && go vet ./... && go test ./...` if code-adjacent references changed. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that release remains blocked until exact OpenCode evidence and Linux amd64 smoke evidence exist; do not invent a version. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert release docs/release notes/support docs only. <!-- sdd-owner: implementation -->
+- [ ] RED: Add structural/readback check that pilot materials position feedback as post-release only and forbid sharing secrets, credentials, private paths, raw sensitive configs, or unredacted local context. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Add a feedback template or discussion guide with exact artifact/checksum fields, sanitized command/output guidance, unsupported construct prompts, false-assurance prompts, and privacy warnings. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add wording checks that pilot feedback is not adoption, usage, security effectiveness, production readiness, or ecosystem acceptance evidence. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Keep pilot pack short, structured, and separate from release readiness claims; verification is structural readback of changed docs/templates. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that pilot starts after release publication and does not block release readiness. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert pilot docs/templates only. <!-- sdd-owner: implementation -->
+- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Completed issues govern delivered WUs; approved issue `#45` governs only comparison integration A-E, while later release Work Units still require their own approvals. <!-- sdd-owner: parent -->
+- [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
+- [ ] Confirm the exact OpenCode version/evidence boundary before Work Unit 3 claims support. <!-- sdd-owner: parent -->
+- [ ] Confirm release candidate evidence is complete before creating tag `v0.1.0-alpha.1`. <!-- sdd-owner: parent -->
+- [ ] Create and publish the GitHub prerelease, upload Linux amd64 binary and `checksums.txt`, and verify published artifacts manually. <!-- sdd-owner: parent -->
+- [ ] Start post-release pilot outreach only after the prerelease is published and artifact/checksum links are known. <!-- sdd-owner: parent -->
+
+Tool note: Pi-lens reported a transient app import/type diagnostic during identity replacement; subsequent `gopls check internal/app/app.go` exited 0 with no diagnostics, and `go test ./internal/app -count=1`, `go test -count=1 ./...` (12 packages), `go vet ./...`, and `go build ./...` exited 0.
+Final accounting: 176 additions + 71 deletions = 247 changed lines across 29 files (including OpenSpec); replacement-only churn is 71 additions + 71 deletions = 142.
