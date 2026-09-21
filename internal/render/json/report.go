@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
 )
 
 var ErrInvalidReport = errors.New("json: invalid report")

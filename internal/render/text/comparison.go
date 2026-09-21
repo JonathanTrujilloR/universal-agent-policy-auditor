@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
 )
 
 var ErrInvalidComparisonReport = errors.New("text: invalid comparison report")

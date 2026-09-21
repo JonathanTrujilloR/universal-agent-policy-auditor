@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/compare"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
 )
 
 var ErrInvalidComparisonReport = errors.New("json: invalid comparison report")

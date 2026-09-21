@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 )
 
 const maxJSONDepth = 8

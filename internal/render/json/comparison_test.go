@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
-	render "github.com/jkelevra/universal-agent-policy-auditor/internal/render/json"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/compare"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
+	render "github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/render/json"
 )
 
 func TestMarshalComparisonGolden(t *testing.T) {

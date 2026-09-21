@@ -1,3 +1,3 @@
-module github.com/jkelevra/universal-agent-policy-auditor
+module github.com/JonathanTrujilloR/universal-agent-policy-auditor
 
 go 1.24.0

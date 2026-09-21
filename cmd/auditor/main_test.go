@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/redact"
-	jsonreport "github.com/jkelevra/universal-agent-policy-auditor/internal/render/json"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/render/text"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/redact"
+	jsonreport "github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/render/json"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/render/text"
 )
 
 func TestVersionAndHelpAreDeterministicDevIdentity(t *testing.T) {

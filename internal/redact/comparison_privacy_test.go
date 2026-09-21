@@ -8,9 +8,9 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/app"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/app"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/compare"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
 )
 
 var comparisonOperandCodes = []compare.ReasonCode{compare.InvalidOperandMetadata, compare.IncompatibleCanonicalization, compare.IncompatibleCoverage, compare.OperandIncomplete, compare.InvalidIdentity, compare.TraceIncomplete, compare.UnresolvedPermission, compare.UnsupportedEffect, compare.ConflictingDuplicate}

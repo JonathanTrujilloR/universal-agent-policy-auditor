@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/compare"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
-	"github.com/jkelevra/universal-agent-policy-auditor/support"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/compare"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/source"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/support"
 	"reflect"
 )
 

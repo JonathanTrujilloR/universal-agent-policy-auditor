@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/model"
-	"github.com/jkelevra/universal-agent-policy-auditor/internal/source"
-	"github.com/jkelevra/universal-agent-policy-auditor/support"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/model"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/internal/source"
+	"github.com/JonathanTrujilloR/universal-agent-policy-auditor/support"
 )
 
 func TestDiscoveryPlanIsDeclarativeAndBounded(t *testing.T) {
