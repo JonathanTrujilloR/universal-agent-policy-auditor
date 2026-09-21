@@ -547,4 +547,8 @@ Skill resolution: paths-injected for all five requested skills; embedded apply e
 - [ ] Create and publish the GitHub prerelease, upload Linux amd64 binary and `checksums.txt`, and verify published artifacts manually. <!-- sdd-owner: parent -->
 - [ ] Start post-release pilot outreach only after the prerelease is published and artifact/checksum links are known. <!-- sdd-owner: parent -->
 
-Final accounting: 239 additions + 6 deletions = 245 changed lines across five files, including all untracked files. Parent task bytes and all prior progress bytes preserved; five WU8 checkboxes re-read as checked, committed-candidate acceptance remains unchecked (73/92 total checked).
+Final accounting before commit evidence: 239 additions + 6 deletions = 245 changed lines across five files, including all untracked files. Parent task bytes and all prior progress bytes preserved.
+
+### Committed-candidate acceptance
+
+Release candidate commit `6ff4abd3ee40b683ea0511885a8d6201795b6bc7` preserves the reviewed WU8 tree. Before commit, the exact candidate passed `python3 scripts/test_release.py -v`, `bash -n scripts/release.sh`, `test -z "$(gofmt -l .)"`, `go test ./... -count=1`, `go test -race ./...`, `go vet ./...`, `go build ./...`, and `git diff --check`; the independent verifier returned PASS. Native RDD review lineage `review-d8ee75c56613fb73` approved the exact five-file candidate and its acknowledgement burned authority. The only advisory was that `scripts/test_release.py` is not itself a PR-CI gate; the tag artifact job still runs the release helper and its checksum/version/help/supported-fixture smoke before upload. WU8 committed-candidate acceptance is now complete (74/92 tasks checked).

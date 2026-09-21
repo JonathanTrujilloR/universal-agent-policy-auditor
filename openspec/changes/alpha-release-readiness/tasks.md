@@ -151,7 +151,7 @@ Issue gate: parent-confirmed approved #54 (`status:approved`, `type:feature`); f
 - [x] GREEN: Add CI/release readiness workflow or scripts for `gofmt -l .`, `go vet ./...`, `go test ./...`, `GOOS=linux GOARCH=amd64 go build`, `checksums.txt`, and smoke commands without publishing. <!-- sdd-owner: implementation -->
 - [x] TRIANGULATE: Add smoke coverage for plain `auditor version` and explicit-format `audit opencode` against the checked-in supported fixture; version JSON remains deferred. <!-- sdd-owner: implementation -->
 - [x] REFACTOR: Keep release helpers deterministic and free of package-manager, signing, provenance, extra-platform, GitHub publication, or tag creation side effects. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from release candidate commit `6ff4abd3ee40b683ea0511885a8d6201795b6bc7`. <!-- sdd-owner: implementation -->
 - [x] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
 
 ## Work Unit 9: Release Docs and Prerelease Preparation
