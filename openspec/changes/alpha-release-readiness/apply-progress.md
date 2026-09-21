@@ -428,3 +428,61 @@ No commit, stage, push, issue/PR mutation, merge, tag, release, authority acquis
 
 Tool note: Pi-lens reported a transient app import/type diagnostic during identity replacement; subsequent `gopls check internal/app/app.go` exited 0 with no diagnostics, and `go test ./internal/app -count=1`, `go test -count=1 ./...` (12 packages), `go vet ./...`, and `go build ./...` exited 0.
 Final accounting: 176 additions + 71 deletions = 247 changed lines across 29 files (including OpenSpec); replacement-only churn is 71 additions + 71 deletions = 142.
+
+## Comparison E — PR 25/28 implementation complete
+
+Structured status consumed: `gentle-ai.sdd-status/v2`, `alpha-release-readiness`, OpenSpec authoritative, apply ready, nextRecommended apply, initial 66/92 complete. Action context: repo-local alpha workspace only; no warnings or remediation. Parent-confirmed issue #45 is approved with exactly type:feature.
+Branch/base: `feat/comparison-cli-activation` from exact `origin/main` `9bf2477d597464d4812cd7fb3d82f5178ada8142`; HEAD unchanged. Separate Claude worktree untouched.
+Workload: explicit auto-chain / stacked-to-main resolves historical forecast; final #45 slice, eventual `Closes #45` is parent-owned. Dependency chain: A → B1 → B2 → C → D → module #52 → 📍 E. No exception authorized.
+
+### TDD Cycle Evidence
+| Phase | Command and evidence |
+|---|---|
+| SAFETY | `go test ./cmd/auditor -count=1`: exit 0, `ok` canonical cmd/auditor package, 0.475s. |
+| RED | `go test ./cmd/auditor -run '^TestComparisonCLI$' -count=1`: exit 1; equivalent, same_path, unsupported, missing each returned `(3,"","invalid_request\n")`; package FAIL 0.400s. |
+| GREEN | Minimal strict parser and existing safe-layer wiring; `go test ./cmd/auditor -count=1`: exit 0, package `ok` 1.051s. The initial test incorrectly expected missing-file exit 2; corrected to existing app unreadable exit 4 and default stderr routing (no app change). |
+| TRIANGULATE | Added invalid syntax before app, unsupported/same-path/missing/non-equivalent/malformed/path cases, redaction rejection of reserved exit 1, error/empty render buffers, short/error writers, 100 repeats, real binary from unrelated cwd, config bytes and reference metadata preservation; focused command exit 0, `ok` 1.000s. |
+| REFACTOR | Extracted audit rendering helper without changing its semantics; gofmt and focused repeated/race tests pass. No semantic package edits. |
+
+Verification commands and outputs (all exit 0):
+- `go test ./cmd/auditor -count=25`: `ok github.com/JonathanTrujilloR/universal-agent-policy-auditor/cmd/auditor 25.690s`.
+- `go test -race ./cmd/auditor -count=1`: same package `ok`, 4.169s.
+- `test -z "$(gofmt -l .)"`, `go vet ./...`, `go build ./...`, `git diff --check`: no output.
+- `go test ./... -count=1`: all 12 canonical packages `ok`: cmd/auditor 1.090s; adapter/claudecode 0.007s; adapter/opencode 0.012s; app 0.035s; compare 0.006s; conformance/claudecode 0.006s; model 0.005s; redact 0.040s; render/json 0.018s; render/text 0.015s; source 0.006s; support 0.361s (internal/ prefixes omitted here).
+Runtime harness: TestComparisonCLI builds and executes the real binary for equivalent/same-path/unsupported/missing inputs in default/text/JSON modes, checks exact safe-layer bytes, exits, and diagnostic routing; not skipped in these runs.
+
+Acceptance: ordered `compare opencode --root --reference-config --target-config --opencode-version` requires explicit nonempty values. Only existing evidence admits 1.18.27; unsupported versions remain incomplete. Optional text/JSON suffix and text-only no-color preserve category-only default. Safe reports are buffered then written once; redaction/render failures emit fixed stderr/4; transport failures return 4 without retry or payload. Audit/version tests remain passing; help intentionally adds comparison grammar.
+Aggregate A-E acceptance now recorded from the retained prior slice evidence plus full passing suite: admission → pure #19 → closed DTO/privacy → JSON/text → CLI. No Claude/cross-client support, broader/narrower inference, color semantics, runtime enforcement, or release capability added.
+Completed persisted checkboxes: E and aggregate A-E acceptance/rollback; cumulative 68/92 complete, 24 pending. All parent-owned rows preserved byte-for-byte.
+Files: `cmd/auditor/main.go`, `cmd/auditor/main_test.go`, new `cmd/auditor/comparison_test.go`, `README.md`, and the two OpenSpec task/progress artifacts.
+Rollback E: revert those CLI/tests/usage/tracking changes only; retain A-D, module identity, and pure #19. Aggregate rollback: reverse E, D, C, B2, B1, A integration slices using their recorded boundaries; retain `internal/compare/**` and all audit functionality. No target state restoration needed.
+Deviations: explicit CLI operand flag names finalize the design placeholder; missing-file test expectation aligned with established app behavior. No production semantics deviation.
+Next: parent-lifecycle for bounded review, settlement, and eventual final #45 delivery; no stage/commit/push/GitHub mutation, acquire/settle, review actor, tag, or release performed.
+
+### Remaining exact unchecked tasks (outside E; parent rows deferred lifecycle)
+- [ ] RED: Add failing workflow/script tests or dry-run checks for formatting, vetting, tests, Linux amd64 build, version injection, checksum generation, and smoke command capture; focused command: relevant script dry-run plus `go test ./...`. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Add CI/release readiness workflow or scripts for `gofmt -l .`, `go vet ./...`, `go test ./...`, `GOOS=linux GOARCH=amd64 go build`, `checksums.txt`, and smoke commands without publishing. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add smoke coverage for plain `auditor version` and explicit-format `audit opencode` against the checked-in supported fixture; version JSON remains deferred. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Keep release helpers deterministic and free of package-manager, signing, provenance, extra-platform, GitHub publication, or tag creation side effects. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
+- [ ] RED: Add documentation claim-boundary checks or structural review checklist that fails when release docs omit Apache-2.0, static-analysis limitations, Linux amd64 evidence, checksums, unsupported Claude, unsupported package managers, or OpenCode evidence references. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Write install, usage, support matrix, limitations, release notes draft, checksum instructions, and smoke evidence references grounded only in checked-in facts. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add negative claim checks for production readiness, security/compliance guarantees, runtime enforcement, package-manager install, unsupported platforms, signing/provenance, and adoption/pilot success. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Make docs reviewer-friendly with quick path, evidence table, limitations, and rollback/publication notes; full verification includes structural readback plus `gofmt -l . && go vet ./... && go test ./...` if code-adjacent references changed. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that release remains blocked until exact OpenCode evidence and Linux amd64 smoke evidence exist; do not invent a version. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert release docs/release notes/support docs only. <!-- sdd-owner: implementation -->
+- [ ] RED: Add structural/readback check that pilot materials position feedback as post-release only and forbid sharing secrets, credentials, private paths, raw sensitive configs, or unredacted local context. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Add a feedback template or discussion guide with exact artifact/checksum fields, sanitized command/output guidance, unsupported construct prompts, false-assurance prompts, and privacy warnings. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add wording checks that pilot feedback is not adoption, usage, security effectiveness, production readiness, or ecosystem acceptance evidence. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Keep pilot pack short, structured, and separate from release readiness claims; verification is structural readback of changed docs/templates. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that pilot starts after release publication and does not block release readiness. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert pilot docs/templates only. <!-- sdd-owner: implementation -->
+- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Completed issues govern delivered WUs; approved issue `#45` governs only comparison integration A-E, while later release Work Units still require their own approvals. <!-- sdd-owner: parent -->
+- [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
+- [ ] Confirm the exact OpenCode version/evidence boundary before Work Unit 3 claims support. <!-- sdd-owner: parent -->
+- [ ] Confirm release candidate evidence is complete before creating tag `v0.1.0-alpha.1`. <!-- sdd-owner: parent -->
+- [ ] Create and publish the GitHub prerelease, upload Linux amd64 binary and `checksums.txt`, and verify published artifacts manually. <!-- sdd-owner: parent -->
+- [ ] Start post-release pilot outreach only after the prerelease is published and artifact/checksum links are known. <!-- sdd-owner: parent -->
+
+Final accounting (including untracked test): 358 additions + 16 deletions = 374 authored changed lines across 6 files; cap 400. Final assertion-only test refinement: `go test ./cmd/auditor -count=1` passed (`ok`, 1.064s); `git diff --check` and persisted checkbox/parent-byte/prior-progress readback passed.

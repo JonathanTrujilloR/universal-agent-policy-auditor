@@ -82,6 +82,7 @@ func TestAuditCommandGrammarAndExitCategories(t *testing.T) {
 func TestExactHelpAndVersion(t *testing.T) {
 	want := "auditor dev\nUsage:\n  auditor version\n" +
 		"  auditor audit <target> --root <abs> --config <abs> [--opencode-version <v>] [--format text|json] [--no-color]\n" +
+		"  auditor compare opencode --root <abs> --reference-config <abs> --target-config <abs> --opencode-version <v> [--format text|json] [--no-color]\n" +
 		"Exit categories:\n  0 complete_no_findings\n  1 complete_with_findings\n  2 unsupported_or_incomplete\n  3 invalid_request\n  4 operational_failure\n"
 	for _, args := range [][]string{nil, {"help"}, {"--help"}, {"-h"}, {"version"}} {
 		expected := want
@@ -244,7 +245,7 @@ func TestExplicitFailuresAndWrites(t *testing.T) {
 			for _, category := range []app.Category{app.InvalidRequest, app.OperationalFailure} {
 				args := []string{"audit", "opencode", "--root", ".", "--config", "private-canary", "--format", format}
 				calls := 0
-				deps := dependencies{app.Run, redact.NewReport, text.Render, jsonreport.Marshal}
+				deps := dependencies{app.Run, redact.NewReport, text.Render, jsonreport.Marshal, renderComparison}
 				deps.run = func(req app.Request) app.Result {
 					calls++
 					r := app.Run(req)

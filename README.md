@@ -10,9 +10,9 @@ Universal Agent Policy Auditor is a **pre-alpha**, local-first Go project for au
 | Supported targets | Source-built CLI only: OpenCode `1.18.27` legacy scalar `permission` with explicit `read`, `edit`, and `bash` actions. |
 | OpenCode | Evidence-gated to the checked-in fixture and matrix row; excluded shapes remain unsupported/incomplete. |
 | Claude Code | Unsupported while issues [#11](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/11) and [#13](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/13) remain blocked. |
-| Comparison | Planned fail-closed semantics are tracked in [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19); no complete OpenCode-versus-Claude support is claimed. |
+| Comparison | Two explicit OpenCode configs use the fail-closed core from [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19); no complete OpenCode-versus-Claude support is claimed. |
 | Runtime behavior | Static modeled configuration semantics only; not runtime policy enforcement, compliance, security, or unsafe-behavior prevention. |
-| Output | Category-only by default; audit-only `--format text` or `--format json` selects safe reports. |
+| Output | Category-only by default; audit/compare `--format text` or `--format json` selects safe reports. |
 | Distribution | No package-manager install, supported binary download, supported platform, signing, provenance, or release artifact is available yet. |
 | Adoption | No adoption, usage, pilot success, or ecosystem acceptance claim is made. |
 | License | Apache License 2.0. See [LICENSE](LICENSE). |
@@ -68,13 +68,25 @@ go run ./cmd/auditor audit opencode --root /workspace/project --config /workspac
 
 `--no-color` is a no-op allowed only after `--format text`; text never emits ANSI.
 No-format audit/version results remain byte-compatible, including empty version evidence.
-Help intentionally advertises the new audit flags. Formats are audit-only;
+Help advertises audit and comparison flags. Formats apply to audit/compare;
 `version` JSON is deferred, and help/version reject format flags. Safely rendered
 reports go to stdout, including exits 3/4; malformed syntax goes to stderr/3.
 Redaction/render failure emits only `operational_failure` to stderr/4; output-write
 failure returns 4 without a diagnostic payload. Exit 1 is reserved, not emitted.
 These are pre-release source commands, not an available binary release. See
 [report safety](docs/report-safety.md) for retained data and limitations.
+
+## Source-built comparison
+
+```text
+auditor compare opencode --root <abs> --reference-config <abs> --target-config <abs> --opencode-version 1.18.27 [--format text|json] [--no-color]
+```
+
+Flags are ordered as shown; both configs must be absolute and within the root.
+Only equivalent supported scalar policies exit 0; non-equivalence is incomplete
+(exit 2), not broader/narrower inference. Category-only remains the default;
+explicit formats use safe comparison reports (`auditor-comparison-report/v1alpha1`
+for JSON). The audit output/failure rules above also apply. No Claude or cross-client support.
 
 ## Verification for contributors
 
@@ -98,7 +110,7 @@ For documentation-only changes, also perform structural readback: confirm the RE
 | CLI/app shell | Done for category/exit output. |
 | OpenCode evidence gate | Done only for OpenCode `1.18.27` legacy scalar `permission` with explicit `read`, `edit`, and `bash`. |
 | Redaction and renderers | Wired for explicit audit formats; default category/exit output is unchanged. |
-| Comparison integration | Planned only through approved fail-closed work in [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19). |
+| Comparison integration | Source CLI active for two explicit OpenCode 1.18.27 configs through [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19). |
 | Release build and checksums | Planned; required before any Linux amd64 artifact support claim. |
 | Post-release pilot | Future feedback collection only; not adoption evidence. |
 
