@@ -15,7 +15,7 @@ name="auditor_${version}_linux_amd64"
 cd -- "$root"
 
 # No timestamps, absolute build paths, VCS dirtiness or host CPU tuning.
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOAMD64=v1 GOFLAGS= \
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOAMD64=v1 GOFLAGS='' \
   go build -trimpath -buildvcs=false -ldflags="-s -w -buildid= -X main.version=$version" \
   -o "$out/$name" ./cmd/auditor
 cp LICENSE "$out/LICENSE"
