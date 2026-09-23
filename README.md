@@ -1,19 +1,19 @@
 # Universal Agent Policy Auditor
 
-Universal Agent Policy Auditor is a **pre-alpha**, local-first Go project for auditing AI coding-agent policy semantics. It is not yet an installable release. A source-built CLI can statically evaluate one explicit OpenCode 1.18.27 legacy scalar permission config and defaults to category/exit output, with explicit safe text or JSON reports; no public alpha binary is available yet.
+Universal Agent Policy Auditor is a local-first Go project for auditing AI coding-agent policy semantics. **Alpha candidate planned: `v0.1.0-alpha.1`**. The planned prerelease is limited to one evidence-backed OpenCode configuration shape on Linux amd64. GitHub Releases are the canonical source of actual availability. Documentation does not assert that an intended asset is published before maintainers publish it.
 
 ## Current status
 
 | Area | Status for this repository today |
 |---|---|
-| Release maturity | Pre-alpha source; `v0.1.0-alpha.1` is planned, not available. |
-| Supported targets | Source-built CLI only: OpenCode `1.18.27` legacy scalar `permission` with explicit `read`, `edit`, and `bash` actions. |
+| Release maturity | Alpha candidate `v0.1.0-alpha.1` is being prepared; publication is maintainer-controlled. |
+| Supported targets | Candidate support: OpenCode `1.18.27` legacy scalar `permission` with explicit `read`, `edit`, and `bash` actions. |
 | OpenCode | Evidence-gated to the checked-in fixture and matrix row; excluded shapes remain unsupported/incomplete. |
 | Claude Code | Unsupported while issues [#11](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/11) and [#13](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/13) remain blocked. |
 | Comparison | Two explicit OpenCode configs use the fail-closed core from [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19); no complete OpenCode-versus-Claude support is claimed. |
 | Runtime behavior | Static modeled configuration semantics only; not runtime policy enforcement, compliance, security, or unsafe-behavior prevention. |
 | Output | Category-only by default; audit/compare `--format text` or `--format json` selects safe reports. |
-| Distribution | No package-manager install, supported binary download, supported platform, signing, provenance, or release artifact is available yet. |
+| Distribution | Intended prerelease assets are one Linux amd64 binary, `checksums.txt`, and `LICENSE`; see [installation](docs/installation.md). No package manager, signing, provenance, or additional platform is in scope. |
 | Adoption | No adoption, usage, pilot success, or ecosystem acceptance claim is made. |
 | License | Apache License 2.0. See [LICENSE](LICENSE). |
 
@@ -111,7 +111,7 @@ For documentation-only changes, also perform structural readback: confirm the RE
 | OpenCode evidence gate | Done only for OpenCode `1.18.27` legacy scalar `permission` with explicit `read`, `edit`, and `bash`. |
 | Redaction and renderers | Wired for explicit audit formats; default category/exit output is unchanged. |
 | Comparison integration | Source CLI active for two explicit OpenCode 1.18.27 configs through [#19](https://github.com/JonathanTrujilloR/universal-agent-policy-auditor/issues/19). |
-| Release build and checksums | Planned; required before any Linux amd64 artifact support claim. |
+| Release build and checksums | Release helper and smoke checks exist; publication and final artifact availability remain maintainer-controlled. |
 | Post-release pilot | Future feedback collection only; not adoption evidence. |
 
 ## Contributing
