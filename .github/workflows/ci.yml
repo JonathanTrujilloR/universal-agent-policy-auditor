@@ -1,0 +1,52 @@
+name: CI and alpha artifacts
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: [v0.1.0-alpha.1]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Format, test, vet, build
+        shell: bash
+        run: |
+          test -z "$(gofmt -l .)"
+          go test ./...
+          go vet ./...
+          go build ./...
+
+  artifacts:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/tags/v0.1.0-alpha.1'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Build, checksum and smoke before upload
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: bash scripts/release.sh "$RELEASE_TAG" "$RUNNER_TEMP/alpha"
+      # Artifact storage only; prerelease publication remains a human gate.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auditor_v0.1.0-alpha.1_linux_amd64
+          path: ${{ runner.temp }}/alpha/*
+          if-no-files-found: error

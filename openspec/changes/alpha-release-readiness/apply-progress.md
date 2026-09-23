@@ -486,3 +486,69 @@ Next: parent-lifecycle for bounded review, settlement, and eventual final #45 de
 - [ ] Start post-release pilot outreach only after the prerelease is published and artifact/checksum links are known. <!-- sdd-owner: parent -->
 
 Final accounting (including untracked test): 358 additions + 16 deletions = 374 authored changed lines across 6 files; cap 400. Final assertion-only test refinement: `go test ./cmd/auditor -count=1` passed (`ok`, 1.064s); `git diff --check` and persisted checkbox/parent-byte/prior-progress readback passed.
+
+
+## Work Unit 8 — #54 CI and reproducible alpha artifacts
+
+Status: assigned implementation complete; committed-candidate acceptance and parent lifecycle remain pending.
+Branch: `feat/alpha-release-artifacts`; base/HEAD: exact `origin/main` `ed2b0dcfb0cfcbbb8a50f5d8918dbeb2986b0dc9` (merged comparison #53).
+Structured status consumed: `gentle-ai.sdd-status/v2`, change `alpha-release-readiness`, OpenSpec authoritative, apply ready, 68/92 initially checked, nextRecommended apply, no blockers.
+Action context: repo-local alpha workspace; edits restricted to workflows, justified release helpers and these tracking files. No warnings; separate Claude worktree untouched.
+Delivery: explicit auto-chain / stacked-to-main overrides historical ask-on-risk forecast for WU8 only. Approved #54 (`status:approved`, `type:feature`) is parent-confirmed; eventual final PR uses `Closes #54`.
+Chain: merged WU7/#53 → 📍 WU8 (PR 26/28) → WU9 docs → WU10 pilot. Cap 400; no exception.
+
+### TDD Cycle Evidence
+| Task | Layer / test | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|
+| Workflow and packaging | Structural + real binary integration, `scripts/test_release.py` (2 tests) | `python3 scripts/test_release.py -v` exited 1: missing workflow and missing release helper (127), `FAILED (errors=2)` | Same command passed after implementation; initial smoke assertion used wrong existing JSON keys and was corrected to `result`/`schema` without renderer changes | Exact events/permissions/actions/ordering, four rejected versions, ELF amd64 identity, repeat byte equality, checksum tampering, license equality, actual version/help/fixture JSON smoke | Shared one packaging helper; no Go changes or further refactor needed; same tests pass |
+
+Safety net: new files only; existing CLI identity remains unchanged. Existing dev identity tests pass in focused/full suites.
+Files: `.github/workflows/ci.yml`, `scripts/release.sh`, `scripts/test_release.py`, `openspec/changes/alpha-release-readiness/tasks.md`, and this progress file.
+Workflow: PR/main checks formatting/tests/vet/build; artifacts job additionally requires successful checks and exact tag push `refs/tags/v0.1.0-alpha.1`. Only contents:read, no persisted checkout credentials, cache disabled (no go.sum), major-pinned actions.
+Packaging: Linux amd64 v1, CGO disabled, trimpath, buildvcs=false, empty build ID, `-X main.version=v0.1.0-alpha.1`; produces version/platform-named binary, `checksums.txt` and unchanged Apache-2.0 LICENSE. No source/runtime behavior changes.
+Upload is Actions artifact storage only, after smoke success. No workflow release attachment/publication; that remains WU9/human-controlled delivery.
+
+### Exact verification commands and outputs
+All final commands exited 0 unless explicitly unavailable:
+- `python3 scripts/test_release.py -v`: `test_package ... ok`, `test_workflow ... ok`, `Ran 2 tests in 0.566s`, `OK`.
+- Each of two real builds emitted `auditor_v0.1.0-alpha.1_linux_amd64: OK` and `Smoke OK: version=v0.1.0-alpha.1 help=OK audit=complete_no_findings checksum=OK`.
+- `bash -n scripts/release.sh`: no output.
+- `test -z "$(gofmt -l .)"`: no output.
+- `go test ./cmd/auditor -count=1`: `ok github.com/JonathanTrujilloR/universal-agent-policy-auditor/cmd/auditor 0.962s`.
+- `go test ./... -count=1`: all 12 canonical packages `ok`: cmd/auditor 1.107s; internal/adapter/claudecode 0.005s; internal/adapter/opencode 0.012s; internal/app 0.058s; internal/compare 0.010s; internal/conformance/claudecode 0.013s; internal/model 0.010s; internal/redact 0.050s; internal/render/json 0.032s; internal/render/text 0.025s; internal/source 0.009s; support 0.364s.
+- `go vet ./...`, `go build ./...`, `git diff --check`: no output.
+- YAML parsing and action structure validated by installed PyYAML 6.0.3 and structural assertions. No dependency installed. `actionlint` and `shellcheck` unavailable; hosted Actions execution not performed.
+
+Checkbox decisions: WU8 RED/GREEN/TRIANGULATE/REFACTOR/rollback checked immediately following their completed evidence. Acceptance row deliberately remains unchecked: local uncommitted candidate passed, but no release-candidate commit exists yet. Parent must record committed-candidate evidence before marking that row; no false commit evidence is claimed.
+Deviations: version JSON remains deferred per tasks/user, superseding older design text; only existing version linker variable is injected, no commit/date runtime fields added. PyYAML structural harness is local and requires installed PyYAML; hosted workflow uses Go checks and standard-library Python JSON smoke only.
+Risks: mutable major action pins follow the requested policy, not immutable SHA pinning; reproducibility demonstrated for two builds with the same toolchain/environment, not arbitrary toolchains. Publication remains blocked on committed candidate, WU9 and parent gates.
+Rollback: remove only the three new workflow/helper/test files, revert WU8 task edits and this appended block; retain all prior progress and Go behavior. No target config state requires restoration.
+Settlement recommendation: parent-lifecycle for review and settlement of this uncommitted bounded candidate; no acquisition, settlement, staging, commit, push, GitHub mutation, tag, release, publication or review actor performed.
+Skill resolution: paths-injected for all five requested skills; embedded apply executor contract used (no separately installed sdd-apply skill found). The loaded gentle-pi release skill is npm-project-specific, so its publication commands do not apply here.
+
+### Remaining exact unchecked tasks (outside implementation completion; parent rows deferred)
+- [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
+- [ ] RED: Add documentation claim-boundary checks or structural review checklist that fails when release docs omit Apache-2.0, static-analysis limitations, Linux amd64 evidence, checksums, unsupported Claude, unsupported package managers, or OpenCode evidence references. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Write install, usage, support matrix, limitations, release notes draft, checksum instructions, and smoke evidence references grounded only in checked-in facts. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add negative claim checks for production readiness, security/compliance guarantees, runtime enforcement, package-manager install, unsupported platforms, signing/provenance, and adoption/pilot success. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Make docs reviewer-friendly with quick path, evidence table, limitations, and rollback/publication notes; full verification includes structural readback plus `gofmt -l . && go vet ./... && go test ./...` if code-adjacent references changed. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that release remains blocked until exact OpenCode evidence and Linux amd64 smoke evidence exist; do not invent a version. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert release docs/release notes/support docs only. <!-- sdd-owner: implementation -->
+- [ ] RED: Add structural/readback check that pilot materials position feedback as post-release only and forbid sharing secrets, credentials, private paths, raw sensitive configs, or unredacted local context. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Add a feedback template or discussion guide with exact artifact/checksum fields, sanitized command/output guidance, unsupported construct prompts, false-assurance prompts, and privacy warnings. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add wording checks that pilot feedback is not adoption, usage, security effectiveness, production readiness, or ecosystem acceptance evidence. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Keep pilot pack short, structured, and separate from release readiness claims; verification is structural readback of changed docs/templates. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that pilot starts after release publication and does not block release readiness. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert pilot docs/templates only. <!-- sdd-owner: implementation -->
+- [ ] Approve one issue per implementation Work Unit before its apply, including labels and scope. Completed issues govern delivered WUs; approved issue `#45` governs only comparison integration A-E, while later release Work Units still require their own approvals. <!-- sdd-owner: parent -->
+- [ ] Approve repository metadata mutations outside source files, including GitHub description, topics, homepage, and license metadata. <!-- sdd-owner: parent -->
+- [ ] Confirm the exact OpenCode version/evidence boundary before Work Unit 3 claims support. <!-- sdd-owner: parent -->
+- [ ] Confirm release candidate evidence is complete before creating tag `v0.1.0-alpha.1`. <!-- sdd-owner: parent -->
+- [ ] Create and publish the GitHub prerelease, upload Linux amd64 binary and `checksums.txt`, and verify published artifacts manually. <!-- sdd-owner: parent -->
+- [ ] Start post-release pilot outreach only after the prerelease is published and artifact/checksum links are known. <!-- sdd-owner: parent -->
+
+Final accounting before commit evidence: 239 additions + 6 deletions = 245 changed lines across five files, including all untracked files. Parent task bytes and all prior progress bytes preserved.
+
+### Committed-candidate acceptance
+
+Release candidate commit `6ff4abd3ee40b683ea0511885a8d6201795b6bc7` preserves the reviewed WU8 tree. Before commit, the exact candidate passed `python3 scripts/test_release.py -v`, `bash -n scripts/release.sh`, `test -z "$(gofmt -l .)"`, `go test ./... -count=1`, `go test -race ./...`, `go vet ./...`, `go build ./...`, and `git diff --check`; the independent verifier returned PASS. Native RDD review lineage `review-d8ee75c56613fb73` approved the exact five-file candidate and its acknowledgement burned authority. The only advisory was that `scripts/test_release.py` is not itself a PR-CI gate; the tag artifact job still runs the release helper and its checksum/version/help/supported-fixture smoke before upload. WU8 committed-candidate acceptance is now complete (74/92 tasks checked).

@@ -145,14 +145,14 @@ Issue gate: approved issue `#45` governs six bounded slices and expands the chai
 
 ## Work Unit 8: CI, Release Build, Checksums, and Smoke
 
-Issue gate: blocked until a dedicated CI/release-build Work Unit issue is approved. Forecast: 220-380 authored lines. File surfaces: `.github/workflows/**`, `scripts/**` or `tools/**` release helpers, `cmd/auditor` build metadata integration, release evidence docs under `docs/` if needed.
+Issue gate: parent-confirmed approved #54 (`status:approved`, `type:feature`); final WU8 slice, eventual `Closes #54` is parent-owned. Forecast: 220-380 authored lines. File surfaces: `.github/workflows/**`, `scripts/**` or `tools/**` release helpers, `cmd/auditor` build metadata integration, release evidence docs under `docs/` if needed.
 
-- [ ] RED: Add failing workflow/script tests or dry-run checks for formatting, vetting, tests, Linux amd64 build, version injection, checksum generation, and smoke command capture; focused command: relevant script dry-run plus `go test ./...`. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Add CI/release readiness workflow or scripts for `gofmt -l .`, `go vet ./...`, `go test ./...`, `GOOS=linux GOARCH=amd64 go build`, `checksums.txt`, and smoke commands without publishing. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Add smoke coverage for plain `auditor version` and explicit-format `audit opencode` against the checked-in supported fixture; version JSON remains deferred. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Keep release helpers deterministic and free of package-manager, signing, provenance, extra-platform, GitHub publication, or tag creation side effects. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from the release candidate commit. <!-- sdd-owner: implementation -->
-- [ ] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
+- [x] RED: Add failing workflow/script tests or dry-run checks for formatting, vetting, tests, Linux amd64 build, version injection, checksum generation, and smoke command capture; focused command: relevant script dry-run plus `go test ./...`. <!-- sdd-owner: implementation -->
+- [x] GREEN: Add CI/release readiness workflow or scripts for `gofmt -l .`, `go vet ./...`, `go test ./...`, `GOOS=linux GOARCH=amd64 go build`, `checksums.txt`, and smoke commands without publishing. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Add smoke coverage for plain `auditor version` and explicit-format `audit opencode` against the checked-in supported fixture; version JSON remains deferred. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Keep release helpers deterministic and free of package-manager, signing, provenance, extra-platform, GitHub publication, or tag creation side effects. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence for formatting, vetting, tests, build, checksum generation, and Linux amd64 smoke from release candidate commit `6ff4abd3ee40b683ea0511885a8d6201795b6bc7`. <!-- sdd-owner: implementation -->
+- [x] Record rollback boundary: revert workflow/scripts/evidence docs only; no target configuration state exists. <!-- sdd-owner: implementation -->
 
 ## Work Unit 9: Release Docs and Prerelease Preparation
 
