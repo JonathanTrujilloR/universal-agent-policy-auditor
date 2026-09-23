@@ -156,14 +156,14 @@ Issue gate: parent-confirmed approved #54 (`status:approved`, `type:feature`); f
 
 ## Work Unit 9: Release Docs and Prerelease Preparation
 
-Issue gate: blocked until a dedicated release-docs Work Unit issue is approved and prior evidence Work Units have landed. Forecast: 180-320 authored lines. File surfaces: `README.md`, `docs/**`, `CHANGELOG.md` or release notes file discovered during apply, support matrix documentation.
+Issue gate: parent-confirmed approved #56 (`status:approved`, exactly `type:docs`); prior evidence Work Units landed. Forecast: 180-320 authored lines. File surfaces: `README.md`, `docs/**`, `CHANGELOG.md` or release notes file discovered during apply, support matrix documentation.
 
-- [ ] RED: Add documentation claim-boundary checks or structural review checklist that fails when release docs omit Apache-2.0, static-analysis limitations, Linux amd64 evidence, checksums, unsupported Claude, unsupported package managers, or OpenCode evidence references. <!-- sdd-owner: implementation -->
-- [ ] GREEN: Write install, usage, support matrix, limitations, release notes draft, checksum instructions, and smoke evidence references grounded only in checked-in facts. <!-- sdd-owner: implementation -->
-- [ ] TRIANGULATE: Add negative claim checks for production readiness, security/compliance guarantees, runtime enforcement, package-manager install, unsupported platforms, signing/provenance, and adoption/pilot success. <!-- sdd-owner: implementation -->
-- [ ] REFACTOR: Make docs reviewer-friendly with quick path, evidence table, limitations, and rollback/publication notes; full verification includes structural readback plus `gofmt -l . && go vet ./... && go test ./...` if code-adjacent references changed. <!-- sdd-owner: implementation -->
-- [ ] Record acceptance evidence that release remains blocked until exact OpenCode evidence and Linux amd64 smoke evidence exist; do not invent a version. <!-- sdd-owner: implementation -->
-- [ ] Record rollback boundary: revert release docs/release notes/support docs only. <!-- sdd-owner: implementation -->
+- [x] RED: Add documentation claim-boundary checks or structural review checklist that fails when release docs omit Apache-2.0, static-analysis limitations, Linux amd64 evidence, checksums, unsupported Claude, unsupported package managers, or OpenCode evidence references. <!-- sdd-owner: implementation -->
+- [x] GREEN: Write install, usage, support matrix, limitations, release notes draft, checksum instructions, and smoke evidence references grounded only in checked-in facts. <!-- sdd-owner: implementation -->
+- [x] TRIANGULATE: Add negative claim checks for production readiness, security/compliance guarantees, runtime enforcement, package-manager install, unsupported platforms, signing/provenance, and adoption/pilot success. <!-- sdd-owner: implementation -->
+- [x] REFACTOR: Make docs reviewer-friendly with quick path, evidence table, limitations, and rollback/publication notes; full verification includes structural readback plus `gofmt -l . && go vet ./... && go test ./...` if code-adjacent references changed. <!-- sdd-owner: implementation -->
+- [x] Record acceptance evidence that release remains blocked until exact OpenCode evidence and Linux amd64 smoke evidence exist; do not invent a version. <!-- sdd-owner: implementation -->
+- [x] Record rollback boundary: revert release docs/release notes/support docs only. <!-- sdd-owner: implementation -->
 
 ## Work Unit 10: Post-Release Pilot Pack
 

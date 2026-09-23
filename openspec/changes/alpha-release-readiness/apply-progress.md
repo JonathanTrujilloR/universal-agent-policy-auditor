@@ -552,3 +552,86 @@ Final accounting before commit evidence: 239 additions + 6 deletions = 245 chang
 ### Committed-candidate acceptance
 
 Release candidate commit `6ff4abd3ee40b683ea0511885a8d6201795b6bc7` preserves the reviewed WU8 tree. Before commit, the exact candidate passed `python3 scripts/test_release.py -v`, `bash -n scripts/release.sh`, `test -z "$(gofmt -l .)"`, `go test ./... -count=1`, `go test -race ./...`, `go vet ./...`, `go build ./...`, and `git diff --check`; the independent verifier returned PASS. Native RDD review lineage `review-d8ee75c56613fb73` approved the exact five-file candidate and its acknowledgement burned authority. The only advisory was that `scripts/test_release.py` is not itself a PR-CI gate; the tag artifact job still runs the release helper and its checksum/version/help/supported-fixture smoke before upload. WU8 committed-candidate acceptance is now complete (74/92 tasks checked).
+## Work Unit 9 — #56 release documentation and prerelease preparation
+
+Status: implementation complete; public prerelease, tag, commit, review, and GitHub actions remain parent-owned. Issue gate: parent-confirmed approved #56 (`status:approved`, exactly `type:docs`); WU8 PR #55 merged as `48d9b3b82842c75fb4df8e0a7bd8541835e7517d`. Parent-reported hosted run `35686621554` attempt 2 passed in 24 seconds on `9bd9cba`. Branch: `docs/alpha-release-documentation`, based on `origin/main` `48d9b3b`.
+
+### Structured status and workload
+
+- Consumed native `gentle-ai.sdd-status/v2`: change `alpha-release-readiness`, OpenSpec authoritative, `applyState: ready`, `nextRecommended: apply`, repository-local action context rooted at this worktree; allowed roots include every changed path; no native blockers or action-context warnings.
+- The high-risk forecast is resolved for this assigned WU9 slice by the parent-provided `auto-chain` / stacked-to-main path. No size exception. This is one coherent final documentation slice for #56; parent may use `Closes #56` only during its delivery action.
+
+### TDD Cycle Evidence
+
+| Phase | Exact command and observed outcome |
+|---|---|
+| RED | `GOTOOLCHAIN=local go test ./docs -run TestAlphaRelease -count=1` exited 1 before documentation implementation: the candidate/canonical availability wording and both new documentation files were missing. |
+| GREEN | After adding the release docs and structural checks, the same focused command exited 0. One wording refinement fixed three intentionally exact expected phrases; no runtime code changed. |
+| TRIANGULATE | Added candidate asset-link/strict-command assertions and negative claim checks; `GOTOOLCHAIN=local go test ./docs -run TestAlphaRelease -count=1` exited 0. |
+| REFACTOR | `gofmt -w docs/alpha_release_test.go` and the focused command exited 0; readback kept the availability caveat, quick path, evidence links, limitations, and rollback/publication boundary concise. |
+
+### Completed tasks and evidence
+
+All six WU9 implementation-owned rows are visibly checked in `tasks.md`: RED, GREEN, TRIANGULATE, REFACTOR, acceptance evidence, and rollback. Parent-owned rows were not changed.
+
+- `README.md` replaces stale pre-alpha/not-installable wording with a planned candidate, intended assets, and GitHub Releases as the canonical availability source.
+- `docs/installation.md` provides qualified intended URLs, Linux-amd64-only checksum and isolated no-`sudo` installation, preserves `LICENSE`, and supplies exact supported audit/compare examples.
+- `docs/release-notes/v0.1.0-alpha.1.md` is an undated draft with source-tag/version/asset matching, checked-in evidence and smoke references, limitations, correction boundary, and a non-gating post-release pilot statement.
+- `docs/alpha_release_test.go` guards required claims, candidate asset URLs/commands, and unevidenced positive claims. It uses no network and does not assert that a release URL responds.
+
+### Verification
+
+All commands below exited 0 with `GOTOOLCHAIN=local`:
+
+- `go test ./docs -run TestAlphaRelease -count=1`
+- `test -z "$(gofmt -l .)"`; `go vet ./...`; `go test ./... -count=1`; `go build ./...`; `python3 scripts/test_release.py -v`; `git diff --check`
+- Private temporary-directory runtime validation: release-version-injected `go build`, `auditor version`, `auditor --help`, supported-fixture audit JSON, and same-input compare text; output: `runtime-doc-example: version/help/audit-json/compare-text passed`.
+- `gopls check docs/alpha_release_test.go` was available and emitted no diagnostics. `shellcheck` was not needed because no shell file changed. A public GitHub-download test was intentionally skipped: publication has not been performed and successful fetches must not be simulated.
+
+Acceptance is grounded in checked-in `support/evidence.md`, `support/matrix.json`, `scripts/release.sh`, and `scripts/test_release.py`; it does not use or link local handoff material. The docs retain the actual exact OpenCode 1.18.27 evidence and WU8 Linux amd64 smoke boundary, but do not claim public artifact availability, signing, provenance, extra platforms, package managers, Claude support, runtime enforcement, security/compliance, production readiness, or adoption.
+
+Rollback boundary: revert `README.md`, `docs/installation.md`, `docs/release-notes/v0.1.0-alpha.1.md`, `docs/alpha_release_test.go`, and this WU9 tracking/checkbox update only. No target configuration or runtime behavior changes.
+
+### Remaining tasks and parent actions
+
+WU10 remains untouched:
+
+- [ ] RED: Add structural/readback check that pilot materials position feedback as post-release only and forbid sharing secrets, credentials, private paths, raw sensitive configs, or unredacted local context. <!-- sdd-owner: implementation -->
+- [ ] GREEN: Add a feedback template or discussion guide with exact artifact/checksum fields, sanitized command/output guidance, unsupported construct prompts, false-assurance prompts, and privacy warnings. <!-- sdd-owner: implementation -->
+- [ ] TRIANGULATE: Add wording checks that pilot feedback is not adoption, usage, security effectiveness, production readiness, or ecosystem acceptance evidence. <!-- sdd-owner: implementation -->
+- [ ] REFACTOR: Keep pilot pack short, structured, and separate from release readiness claims; verification is structural readback of changed docs/templates. <!-- sdd-owner: implementation -->
+- [ ] Record acceptance evidence that pilot starts after release publication and does not block release readiness. <!-- sdd-owner: implementation -->
+- [ ] Record rollback boundary: revert pilot docs/templates only. <!-- sdd-owner: implementation -->
+
+Deferred parent lifecycle actions include review/delivery for #56, confirming release-candidate evidence, creating/publishing the prerelease and assets, and later pilot outreach. No deviation from design: WU9 is documentation-only. Writer context for parent risk assessment: `PI_MODEL=gpt-5.6-terra`, `PI_REASONING_LEVEL=high`.
+
+Workload: superseded by the bounded installation-safety correction below.
+
+### WU9 corrective installation-safety evidence
+
+An independent inspection found that the original fresh-`HOME` snippet could not create its parent directory, continued after a bad checksum, and attempted to install `LICENSE` onto itself. The earlier WU9 completion evidence is superseded only for this correction; WU10 and every parent-owned row remain unchanged.
+
+| Phase | Evidence |
+|---|---|
+| RED | `GOTOOLCHAIN=local go test ./docs -run TestAlphaRelease -count=1` exited 1: the extracted actual snippet failed the fresh-home executable regression (`exit status 127`). |
+| GREEN | The same command exited 0 after the exact documentation snippet became a `set -eu` subshell, creates `$HOME/.local/opt`, uses fail-capable curl flags, and retains the downloaded license without self-copy. |
+| TRIANGULATE | The actual extracted snippet ran against a bounded fake download command: fresh-home success executed the installed sentinel only for `version` and `--help`; checksum corruption and a `checksums.txt` download failure both exited nonzero with no installed binary/execution. Download logs prove each scenario reached its intended barrier; no hosted fetch was attempted. |
+| REFACTOR | Kept the runtime harness table-driven and fixture-bound; no production Go or runtime behavior changed. |
+
+Final correction checks all exited 0: `GOTOOLCHAIN=local go test ./docs -run TestAlphaRelease -count=1`; `test -z "$(gofmt -l .)"`; `GOTOOLCHAIN=local go test ./... -count=1`; `GOTOOLCHAIN=local go vet ./...`; `GOTOOLCHAIN=local go build ./...`; `python3 scripts/test_release.py -v`; `git diff --check`; and `gopls check docs/alpha_release_test.go` (no diagnostics).
+
+All six WU9 rows are rechecked after the executable regressions passed. Rollback remains limited to the original six WU9 files; publication, tags, review, and GitHub actions were not performed. An initial harness iteration surfaced three untracked package-named files under `docs/`; they were deleted before final verification and no host-availability result is claimed. The final test removes inherited `HOME`/`PATH` before adding its isolated values, so its fake downloader cannot resolve to a real download command. Final workload: superseded by the journey-scope correction below.
+
+### WU9 correction: complete documented install journey
+
+A new bounded attempt corrected the scope bug: `INSTALL_DIR` was local to the install subshell while the second block used it outside. WU9 rows were temporarily restored to unchecked after the RED failure and rechecked only after final tests.
+
+| Phase | Evidence |
+|---|---|
+| Safety | Pre-change `GOTOOLCHAIN=local go test ./docs -run TestAlphaRelease -count=1` passed. |
+| RED | After the test combined the parsed bash blocks, it failed fresh-home with exit 127: `/auditor` was attempted after the subshell. |
+| GREEN | One fail-closed subshell now installs and runs version, help, audit, and compare; the sentinel regression passed. |
+| TRIANGULATE | The exact parsed guide ran from a temporary `cmd.Dir`/`TMPDIR` with a fake local downloader serving an actual `scripts/release.sh` package; it asserted version/help, JSON audit success, and equivalent compare text. Checksum/download failures executed neither binary nor smoke. |
+| REFACTOR | `gofmt -w docs/alpha_release_test.go` and the focused suite passed; no runtime behavior changed. |
+
+Final checks passed: focused docs test; `GOTOOLCHAIN=local go test ./... -count=1`; `GOTOOLCHAIN=local go vet ./...`; `GOTOOLCHAIN=local go build ./...`; `test -z "$(gofmt -l .)"`; `python3 scripts/test_release.py -v`; `git diff --check`; and `gopls check docs/alpha_release_test.go`. The guide prints the retained executable's absolute path, explains its variables are local, and safely cleans only its demo root. WU10's exact unchecked rows and all parent-owned lifecycle rows remain unchanged. Workload: current six-file candidate is counted after this correction; no exception, delivery, publication, or review action.
